@@ -1,0 +1,45 @@
+{
+  "model": "claude-sonnet-4-20250514",
+  "permissions": {
+    "allow": ["Read", "Grep", "Glob", "LS"],
+    "deny": [
+      "Bash(rm -rf*)",
+      "Bash(git push --force*)",
+      "Bash(curl*openai.com*)",
+      "Bash(curl*api.anthropic.com*)",
+      "Bash(npm install* --save* openai*)",
+      "Bash(npm install* --save* @anthropic*)"
+    ],
+    "ask": ["Write", "Edit", "Bash", "MultiEdit"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "npx tsc --noEmit 2>&1 | head -20" },
+          { "type": "command", "command": "npx eslint --max-warnings 0 2>&1 | head -20" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "bash scripts/security-gate.sh" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash scripts/trigger-docs-keeper.sh" }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "60"
+  }
+}

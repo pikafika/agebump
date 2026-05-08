@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "노화방지턱",
+    "slug": "agebump",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4A7C59"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.agebump.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "음식 사진을 찍어 혈당 영향을 분석하기 위해 카메라가 필요합니다.",
+        "NSPhotoLibraryUsageDescription": "갤러리에서 음식 사진을 선택하기 위해 사진 접근 권한이 필요합니다."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#4A7C59"
+      },
+      "package": "com.agebump.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "음식 사진을 찍어 혈당 영향을 분석하기 위해 카메라가 필요합니다."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "갤러리에서 음식 사진을 선택하기 위해 사진 접근 권한이 필요합니다."
+        }
+      ]
+    ],
+    "scheme": "agebump",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
