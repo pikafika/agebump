@@ -4,6 +4,9 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -110,9 +113,50 @@ function MealTypePicker({ value, onChange }: MealTypePickerProps) {
   );
 }
 
+interface AlternateChipsProps {
+  names: string[];
+  onPick: (name: string) => void;
+}
+function AlternateChips({ names, onPick }: AlternateChipsProps) {
+  if (names.length === 0) return null;
+  return (
+    <View style={styles.altWrap}>
+      <Text style={styles.altLabel}>이거 아닌가요?</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.altRow}
+      >
+        {names.map((n) => (
+          <TouchableOpacity
+            key={n}
+            style={styles.altChip}
+            onPress={() => onPick(n)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.altChipLabel}>{n}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+function levelFromGi(gi: number): FoodAnalysisResult['overallGiLevel'] {
+  if (gi <= 55) return 'low';
+  if (gi <= 69) return 'moderate';
+  if (gi <= 89) return 'high';
+  return 'veryHigh';
+}
+
 export function AnalysisScreen() {
-  const { imageUri, foodName } = useLocalSearchParams<{ imageUri?: string; foodName?: string }>();
-  const { addRecord, setIsAnalyzing } = useFoodStore();
+  const { imageUri, foodName, recordId } = useLocalSearchParams<{
+    imageUri?: string;
+    foodName?: string;
+    recordId?: string;
+  }>();
+  const { addRecord, setIsAnalyzing, getRecordById } = useFoodStore();
+  const isViewingSaved = Boolean(recordId);
 
   const [result, setResult] = useState<FoodAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,6 +164,8 @@ export function AnalysisScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [memo, setMemo] = useState('');
   const [mealType, setMealType] = useState<MealType>(detectMealType);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
 
   async function runAnalysis() {
     setIsLoading(true);
@@ -128,7 +174,22 @@ export function AnalysisScreen() {
     setIsAnalyzing(true);
     try {
       let res: FoodAnalysisResult;
-      if (imageUri) {
+      if (recordId) {
+        const saved = getRecordById(recordId);
+        if (!saved) throw new Error('기록을 찾을 수 없습니다.');
+        const totalCalories = saved.foods.reduce((s, f) => s + f.calories, 0);
+        const avgGi = saved.foods.length > 0
+          ? saved.foods.reduce((s, f) => s + f.gi, 0) / saved.foods.length
+          : 0;
+        res = {
+          foods: saved.foods,
+          totalCalories,
+          overallGiLevel: levelFromGi(avgGi),
+          disclaimer: 'AI 추정값으로 참고용입니다.',
+        };
+        if (saved.memo) setMemo(saved.memo);
+        setMealType(saved.mealType);
+      } else if (imageUri) {
         const base64 = await imageToBase64(decodeURIComponent(imageUri));
         res = await analyzeFood(base64);
       } else if (foodName) {
@@ -154,6 +215,32 @@ export function AnalysisScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { runAnalysis(); }, []);
 
+  async function handleNameSubmit(rawName: string) {
+    const name = rawName.trim();
+    setIsEditingName(false);
+    const currentName = result?.foods[0]?.name ?? '';
+    if (!name || name === currentName) return;
+    setIsLoading(true);
+    setErrorMessage(null);
+    setIsNetworkError(false);
+    setIsAnalyzing(true);
+    try {
+      const res = await analyzeFoodText(name);
+      if (res.error) setErrorMessage(res.error);
+      else setResult(res);
+    } catch (err) {
+      setIsNetworkError(err instanceof GeminiNetworkError);
+      setErrorMessage(
+        err instanceof GeminiNetworkError
+          ? '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.'
+          : '음식을 인식할 수 없어요. 다시 시도해주세요.',
+      );
+    } finally {
+      setIsLoading(false);
+      setIsAnalyzing(false);
+    }
+  }
+
   function handleSave() {
     if (!result) return;
     const record: FoodRecord = {
@@ -170,7 +257,10 @@ export function AnalysisScreen() {
     ]);
   }
 
-  const decodedUri = imageUri ? decodeURIComponent(imageUri) : null;
+  const savedRecord = recordId ? getRecordById(recordId) : undefined;
+  const decodedUri = imageUri
+    ? decodeURIComponent(imageUri)
+    : (savedRecord?.imageUri ?? null);
   const allFoods: FoodItem[] = result?.foods ?? [];
   const totalCarbs   = allFoods.reduce((s, f) => s + f.carbs, 0);
   const totalProtein = allFoods.reduce((s, f) => s + f.protein, 0);
@@ -194,16 +284,32 @@ export function AnalysisScreen() {
     );
   }
 
+  const alternateNames = result?.foods[0]?.alternateNames ?? [];
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.headerSide}>
+          <Text style={styles.headerArrow}>←</Text>
+        </Pressable>
+        <Text style={styles.headerTitle}>
+          {isViewingSaved ? '식사 상세' : '음식 분석'}
+        </Text>
+        <Pressable hitSlop={12} style={styles.headerSide} onPress={() => {}}>
+          <Text style={styles.headerDots}>⋮</Text>
+        </Pressable>
+      </View>
+
+      <KeyboardAvoidingView
+        style={styles.flex1}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* 뒤로가기 */}
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Text style={styles.backLabel}>← 돌아가기</Text>
-        </TouchableOpacity>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
 
         {/* 음식 헤더 */}
         <MontageCard style={styles.heroCard} elevated={false}>
@@ -215,10 +321,39 @@ export function AnalysisScreen() {
             </View>
           )}
           <View style={styles.heroInfo}>
-            <Text style={styles.foodNames} numberOfLines={2}>{foodNames}</Text>
+            {isViewingSaved ? (
+              <Text style={styles.foodNames} numberOfLines={2}>{foodNames}</Text>
+            ) : isEditingName ? (
+              <TextInput
+                style={styles.foodNameInput}
+                value={editedName}
+                onChangeText={setEditedName}
+                autoFocus
+                selectTextOnFocus
+                returnKeyType="done"
+                onSubmitEditing={() => handleNameSubmit(editedName)}
+                onBlur={() => handleNameSubmit(editedName)}
+                placeholder="정확한 음식명을 입력하세요"
+                placeholderTextColor={COLORS.label.assistive as string}
+              />
+            ) : (
+              <TouchableOpacity
+                onPress={() => {
+                  setEditedName(foodNames);
+                  setIsEditingName(true);
+                }}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.foodNames} numberOfLines={2}>{foodNames}</Text>
+                <Text style={styles.foodNameHint}>탭해서 정정 ✏️</Text>
+              </TouchableOpacity>
+            )}
             <Text style={styles.calories}>{result?.totalCalories ?? 0} <Text style={styles.caloriesUnit}>kcal</Text></Text>
           </View>
         </MontageCard>
+
+        {/* 대체 후보 — AI 확신도 낮을 때 노출 */}
+        <AlternateChips names={alternateNames} onPick={handleNameSubmit} />
 
         {/* 혈당 스파이크 경고 */}
         {maxSpikeRisk > 60 && (
@@ -254,24 +389,64 @@ export function AnalysisScreen() {
           />
         </View>
 
+        {/* 저장된 AI 가이드 미리보기 */}
+        {isViewingSaved && savedRecord?.aiGuide && (
+          <View style={styles.aiGuideSection}>
+            <Text style={styles.aiGuideHeader}>🤖 저장된 AI 가이드</Text>
+            {([
+              { icon: '⚡', title: '지금 바로',    text: savedRecord.aiGuide.immediateAction },
+              { icon: '🥗', title: '다음 식사',    text: savedRecord.aiGuide.nextMealSuggestion },
+              { icon: '✨', title: '오늘의 총평', text: savedRecord.aiGuide.dailySummary },
+            ] as const).map(({ icon, title, text }) => (
+              <MontageCard key={title} style={styles.aiGuideCard}>
+                <View style={styles.aiGuideCardHead}>
+                  <Text style={styles.aiGuideCardIcon}>{icon}</Text>
+                  <Text style={styles.aiGuideCardTitle}>{title}</Text>
+                </View>
+                <Text style={styles.aiGuideCardBody}>{text}</Text>
+              </MontageCard>
+            ))}
+          </View>
+        )}
+
         {/* 액션 */}
         <View style={styles.actions}>
-          <MontageButton label="저장하기" onPress={handleSave} size="large" fullWidth />
+          {!isViewingSaved && (
+            <MontageButton label="저장하기" onPress={handleSave} size="large" fullWidth />
+          )}
           <MontageButton
-            label="🤖 AI 가이드 받기"
-            onPress={() => router.push('/guide')}
+            label={savedRecord?.aiGuide ? '🔄 AI 가이드 다시 생성' : '🤖 AI 가이드 받기'}
+            onPress={() => {
+              const params: string[] = [];
+              if (recordId) params.push(`recordId=${encodeURIComponent(recordId)}`);
+              if (savedRecord?.timestamp) params.push(`ts=${savedRecord.timestamp}`);
+              if (savedRecord?.aiGuide) params.push('regenerate=1');
+              const qs = params.join('&');
+              router.push(qs ? `/guide?${qs}` : '/guide');
+            }}
             variant="outlined"
             size="large"
             fullWidth
           />
+          {isViewingSaved && (
+            <MontageButton
+              label="목록으로 돌아가기"
+              onPress={() => router.back()}
+              variant="text"
+              size="large"
+              fullWidth
+            />
+          )}
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background.normalAlternative },
+  flex1: { flex: 1 },
   scroll: { paddingHorizontal: SPACING.pt20, paddingBottom: SPACING.pt48, gap: SPACING.pt16 },
 
   skeletonWrap: { flex: 1, padding: SPACING.pt20, gap: SPACING.pt12 },
@@ -283,8 +458,18 @@ const styles = StyleSheet.create({
   errorTitle: { ...TYPOGRAPHY.heading2, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.bold },
   errorBody: { ...TYPOGRAPHY.body2, color: COLORS.label.alternative, textAlign: 'center', lineHeight: 22 },
 
-  backBtn: { paddingTop: SPACING.pt08 },
-  backLabel: { ...TYPOGRAPHY.label1, color: COLORS.primary.normal, fontWeight: FONT_WEIGHT.medium },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.pt20,
+    paddingTop: SPACING.pt08,
+    paddingBottom: SPACING.pt12,
+  },
+  headerSide: { width: 32, alignItems: 'center' },
+  headerArrow: { fontSize: 22, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.medium },
+  headerDots:  { fontSize: 22, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.medium },
+  headerTitle: { ...TYPOGRAPHY.heading2, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.bold },
 
   heroCard: {
     flexDirection: 'row',
@@ -304,8 +489,31 @@ const styles = StyleSheet.create({
   },
   heroInfo: { flex: 1, gap: SPACING.pt04 },
   foodNames: { ...TYPOGRAPHY.heading2, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.bold },
+  foodNameHint: { ...TYPOGRAPHY.caption1, color: COLORS.label.assistive, marginTop: SPACING.pt02 },
+  foodNameInput: {
+    ...TYPOGRAPHY.heading2,
+    color: COLORS.label.normal,
+    fontWeight: FONT_WEIGHT.bold,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.primary.normal,
+    paddingVertical: SPACING.pt04,
+  },
   calories: { ...TYPOGRAPHY.title2, color: COLORS.primary.normal, fontWeight: FONT_WEIGHT.bold },
   caloriesUnit: { ...TYPOGRAPHY.body1, color: COLORS.label.alternative, fontWeight: FONT_WEIGHT.regular },
+
+  altWrap: { gap: SPACING.pt08 },
+  altLabel: { ...TYPOGRAPHY.caption1, color: COLORS.label.alternative, fontWeight: FONT_WEIGHT.medium },
+  altRow: { gap: SPACING.pt08, paddingRight: SPACING.pt08 },
+  altChip: {
+    paddingHorizontal: SPACING.pt16,
+    paddingVertical: SPACING.pt08,
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.background.elevated,
+    borderWidth: 1,
+    borderColor: COLORS.line.solidNormal,
+    ...SQUIRCLE,
+  },
+  altChipLabel: { ...TYPOGRAPHY.label1, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.medium },
 
   spikeBanner: {
     backgroundColor: 'rgba(255,66,66,0.08)',
@@ -336,6 +544,26 @@ const styles = StyleSheet.create({
     borderColor: COLORS.line.solidNormal,
     minHeight: 80,
     ...SQUIRCLE,
+  },
+
+  aiGuideSection: { gap: SPACING.pt08 },
+  aiGuideHeader: {
+    ...TYPOGRAPHY.label1,
+    color: COLORS.label.alternative,
+    fontWeight: FONT_WEIGHT.medium,
+  },
+  aiGuideCard: { gap: SPACING.pt08, padding: SPACING.pt16 },
+  aiGuideCardHead: { flexDirection: 'row', alignItems: 'center', gap: SPACING.pt08 },
+  aiGuideCardIcon: { fontSize: 18 },
+  aiGuideCardTitle: {
+    ...TYPOGRAPHY.label1,
+    color: COLORS.label.alternative,
+    fontWeight: FONT_WEIGHT.semiBold,
+  },
+  aiGuideCardBody: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.label.normal,
+    lineHeight: 22,
   },
 
   actions: { gap: SPACING.pt08, paddingTop: SPACING.pt08 },

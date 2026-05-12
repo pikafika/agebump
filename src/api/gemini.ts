@@ -3,9 +3,6 @@ import { type AIGuide, type FoodAnalysisResult, type FoodRecord, type GlycemicLe
 const GEMINI_API_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-const GEMINI_STREAM_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent';
-
 // ─── 커스텀 에러 ───────────────────────────────────────────────────────────────
 
 export class GeminiApiKeyError extends Error {
@@ -31,13 +28,30 @@ export class GeminiParseError extends Error {
 
 // ─── 프롬프트 ──────────────────────────────────────────────────────────────────
 
-const FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 영양 전문가입니다.
-이미지 속 음식을 분석해서 반드시 아래 JSON 형식으로만 응답하세요.
-다른 텍스트는 절대 포함하지 마세요.
+const FOOD_ANALYSIS_PROMPT = `당신은 한국 음식과 가공식품(특히 라면·컵라면)을 정확히 식별하는 영양 전문가입니다.
+반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트는 절대 포함하지 마세요.
 
+식별 우선순위:
+1. 패키지/용기에 보이는 한글·영문 브랜드 텍스트(예: "농심", "오뚜기", "삼양", "Nongshim")와 제품명을 최우선 단서로 사용.
+2. 포장 색상과 디자인 — 한국 라면 SKU는 색으로 거의 결정됨.
+3. 용기 형태(컵 vs 봉지 vs 사발 vs 즉석조리)를 구분해서 같은 브랜드라도 정확한 SKU를 식별.
+4. 위 단서가 부족하면 국물 색·건더기·면 두께 등으로 보조 판단.
+
+한국 컵·봉지 라면 색상 가이드(참고):
+- 육개장 사발면(농심): 빨강·노랑 사발형, 둥근 컵, 한글 "육개장사발면" 표기.
+- 신라면(농심): 진한 빨강 봉지/컵, "辛" 한자.
+- 진라면(오뚜기): 매운맛은 빨강, 순한맛은 초록 봉지. "JIN" 영문.
+- 짜파게티(농심): 검정·노랑 봉지, 짜장 소스.
+- 삼양라면(삼양): 주황 봉지, 클래식 디자인.
+- 너구리(농심): 빨강·다시마 그림.
+- 안성탕면(농심): 갈색·노랑 봉지.
+
+식별 확신이 낮으면 단정하지 말고 confidence를 0.6 이하로 낮추고, alternateNames에 가능성 높은 후보 2~3개를 나열하세요.
+
+출력 JSON 스키마:
 {
   "foods": [{
-    "name": "string (한국어)",
+    "name": "string (한국어, 가장 가능성 높은 정확한 제품명)",
     "calories": number,
     "carbs": number,
     "protein": number,
@@ -45,7 +59,9 @@ const FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 영양 전문가입니다.
     "sugar": number,
     "gi": number (0-100),
     "giLevel": "low" | "moderate" | "high" | "veryHigh",
-    "spikeRisk": number (0-100)
+    "spikeRisk": number (0-100),
+    "confidence": number (0-1, 식별 확신도),
+    "alternateNames": ["string", ...] (확신도가 낮을 때 후보 2~3개, 확신이 높으면 빈 배열)
   }],
   "totalCalories": number,
   "overallGiLevel": "low" | "moderate" | "high" | "veryHigh",
@@ -121,7 +137,15 @@ async function callGeminiApi(parts: GeminiPart[]): Promise<string> {
     response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts }] }),
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig: {
+          temperature: 0.2,
+          topP: 0.8,
+          topK: 32,
+          responseMimeType: 'application/json',
+        },
+      }),
     });
   } catch (err) {
     throw new GeminiNetworkError(undefined, (err as Error).message);
@@ -239,28 +263,26 @@ function parseGuideResponse(text: string): AIGuide {
 }
 
 /**
- * 오늘 식사 기록을 기반으로 Gemini 스트리밍 API에서 AI 가이드를 생성한다.
- * onChunk가 제공되면 텍스트 청크마다 호출되어 UI 실시간 업데이트에 사용된다.
- * 스트리밍 미지원 환경에서는 일반 응답으로 자동 대체된다.
+ * 식사 기록을 기반으로 Gemini API에서 AI 가이드를 생성한다.
+ * React Native fetch가 SSE/스트리밍을 안정적으로 지원하지 않아
+ * 비-스트리밍(generateContent) 경로만 사용한다. 타이핑 애니메이션은
+ * 호출 측(guide.tsx의 startTyping)에서 처리한다.
  */
-export async function generateGuide(
-  todayRecords: FoodRecord[],
-  onChunk?: (text: string) => void,
-): Promise<AIGuide> {
+export async function generateGuide(records: FoodRecord[]): Promise<AIGuide> {
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
   if (!apiKey || apiKey.startsWith('your_')) throw new GeminiApiKeyError();
 
-  const allFoods = todayRecords.flatMap((r: FoodRecord) =>
+  const allFoods = records.flatMap((r) =>
     r.foods.map((f) => ({ name: f.name, calories: f.calories, giLevel: f.giLevel })),
   );
-  const totalCalories = todayRecords.reduce(
-    (sum: number, r: FoodRecord) => sum + r.foods.reduce((s: number, f) => s + f.calories, 0),
+  const totalCalories = records.reduce(
+    (sum, r) => sum + r.foods.reduce((s, f) => s + f.calories, 0),
     0,
   );
-  const allGiValues = todayRecords.flatMap((r: FoodRecord) => r.foods.map((f) => f.gi));
+  const allGiValues = records.flatMap((r) => r.foods.map((f) => f.gi));
   const avgGi =
     allGiValues.length > 0
-      ? allGiValues.reduce((a: number, b: number) => a + b, 0) / allGiValues.length
+      ? allGiValues.reduce((a, b) => a + b, 0) / allGiValues.length
       : 0;
   const overallGiLevel: GlycemicLevel = computeGiLevel(avgGi);
 
@@ -269,10 +291,18 @@ export async function generateGuide(
 
   let response: Response;
   try {
-    response = await fetch(`${GEMINI_STREAM_URL}?alt=sse&key=${apiKey}`, {
+    response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.4,
+          topP: 0.9,
+          topK: 32,
+          responseMimeType: 'application/json',
+        },
+      }),
     });
   } catch (err) {
     throw new GeminiNetworkError(undefined, (err as Error).message);
@@ -282,45 +312,10 @@ export async function generateGuide(
     throw new GeminiNetworkError(response.status, await response.text());
   }
 
-  // 스트리밍 미지원 환경 대체 처리
-  if (!response.body) {
-    const data = (await response.json()) as {
-      candidates?: { content?: { parts?: { text?: string }[] } }[];
-    };
-    const fallbackText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    return parseGuideResponse(fallbackText);
-  }
-
-  // SSE 스트림 읽기
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let accumulated = '';
-  let buffer = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-
-    for (const line of lines) {
-      if (!line.startsWith('data: ') || line === 'data: [DONE]') continue;
-      try {
-        const json = JSON.parse(line.slice(6)) as {
-          candidates?: { content?: { parts?: { text?: string }[] } }[];
-        };
-        const chunk = json.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-        if (chunk) {
-          accumulated += chunk;
-          onChunk?.(chunk);
-        }
-      } catch {
-        // 불완전한 SSE 청크 무시
-      }
-    }
-  }
-
-  return parseGuideResponse(accumulated);
+  const data = (await response.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  if (!text) throw new GeminiParseError('');
+  return parseGuideResponse(text);
 }

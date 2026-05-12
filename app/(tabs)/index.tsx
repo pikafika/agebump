@@ -6,9 +6,10 @@ import {
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
 import { router } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 import {
   COLORS,
   FONT_FAMILY,
@@ -20,20 +21,136 @@ import {
   TYPOGRAPHY,
 } from '../../src/constants/theme';
 import { useFoodStore } from '../../src/store/foodStore';
+import { useUserProfileStore } from '../../src/store/userProfileStore';
 
-const TARGET_CALORIES = 2000;
 const APP_NAME = '노화방지턱';
 const TICKS_COUNT = 11;
 const PILL_HEIGHT = 28;
 const CARD_RADIUS = 32;
 const CTA_RADIUS = 29; // 32 → 29 (≈10% reduction)
 
-// Soft pastel mint palette for the gauge card
-const CARD_BG_EMPTY = '#F0F8F1';
-const CARD_BG_FILL = '#B8E6C1';
-const CARD_BORDER = 'rgba(70,180,110,0.20)';
-const CARD_HALO_1 = 'rgba(255,236,179,0.55)'; // warm yellow blob
-const CARD_HALO_2 = 'rgba(178,232,196,0.55)'; // mint blob
+// ── Sine wave SVG ──
+const WAVE_WIDTH = 820; // 좌측 30% 이동해도 우측이 카드 가로를 가득 채우도록 키움
+const WAVE_HEIGHT = 48; // sin 표면이 차지하는 상단 영역 높이
+const WAVE_FILL_DEPTH = 800; // 표면 아래로 채울 길이 (충분히 크게 → 카드 overflow로 잘림)
+const WAVE_AMP = 18;
+const WAVE_CYCLES = 5; // WAVE_WIDTH 증가에 맞춰 사이클도 +1 → cycle 폭 유지(164px)
+const WAVE_BACK_OFFSET = -Math.round(WAVE_WIDTH * 0.3); // waveBack 추가 좌측 이동 (약 -246px)
+
+// sin 표면(상단 WAVE_HEIGHT) + 그 아래 totalHeight까지 단색 채움
+function buildWavePath(totalHeight: number): string {
+  const mid = WAVE_HEIGHT / 2;
+  const cycle = WAVE_WIDTH / WAVE_CYCLES;
+  const cp = cycle / 4;
+  let d = `M 0 ${mid}`;
+  for (let i = 0; i < WAVE_CYCLES; i++) {
+    const x0 = i * cycle;
+    const x1 = x0 + cycle / 2;
+    const x2 = x0 + cycle;
+    d += ` C ${x0 + cp} ${mid - WAVE_AMP}, ${x1 - cp} ${mid - WAVE_AMP}, ${x1} ${mid}`;
+    d += ` C ${x1 + cp} ${mid + WAVE_AMP}, ${x2 - cp} ${mid + WAVE_AMP}, ${x2} ${mid}`;
+  }
+  d += ` L ${WAVE_WIDTH} ${totalHeight} L 0 ${totalHeight} Z`;
+  return d;
+}
+const WAVE_PATH_FULL = buildWavePath(WAVE_FILL_DEPTH);
+const WAVE_PATH_BAND = buildWavePath(WAVE_HEIGHT);
+
+interface WaveSvgProps {
+  fill: string;
+  stroke?: string;
+  full?: boolean; // true면 표면 아래로 풀 채움 / false면 표면 띠만
+}
+function WaveSvg({ fill, stroke, full = false }: WaveSvgProps) {
+  const h = full ? WAVE_FILL_DEPTH : WAVE_HEIGHT;
+  const d = full ? WAVE_PATH_FULL : WAVE_PATH_BAND;
+  return (
+    <Svg width={WAVE_WIDTH} height={h} pointerEvents="none">
+      <Path
+        d={d}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={stroke ? 1.5 : 0}
+      />
+    </Svg>
+  );
+}
+
+// ── 상태별 컬러 테마 ───────────────────────────────────────────────────────────
+// ratio = totalCalories / dailyCalorieGoal 을 4단계로 분류해 카드/wave/텍스트 색을
+// 동시에 변경. 사용자에게 오늘의 진행 상태를 한눈에 보여주는 목적.
+type CalorieState = 'start' | 'progress' | 'near' | 'over';
+
+interface CalorieTheme {
+  cardBg: string;
+  cardBorder: string;
+  halo1: string;
+  halo2: string;
+  waveBackFill: string;
+  waveFrontFill: string;
+  waveFrontStroke: string;
+  text: string;
+  textSoft: string;
+  badgeDot: string;
+}
+
+function getCalorieState(ratio: number): CalorieState {
+  if (ratio < 0.30) return 'start';
+  if (ratio < 0.80) return 'progress';
+  if (ratio < 1.05) return 'near';
+  return 'over';
+}
+
+const THEME_BY_STATE: Record<CalorieState, CalorieTheme> = {
+  start: {
+    cardBg:          '#EEF4FA',
+    cardBorder:      'rgba(80,130,180,0.20)',
+    halo1:           'rgba(200,220,255,0.55)',
+    halo2:           'rgba(180,210,255,0.55)',
+    waveBackFill:    'rgba(120,170,230,0.12)',
+    waveFrontFill:   'rgba(90,150,210,0.18)',
+    waveFrontStroke: 'rgba(60,120,180,0.55)',
+    text:            '#0F2B4A',
+    textSoft:        'rgba(15,43,74,0.65)',
+    badgeDot:        '#46B4E6',
+  },
+  progress: {
+    cardBg:          '#F0F8F1',
+    cardBorder:      'rgba(70,180,110,0.20)',
+    halo1:           'rgba(255,236,179,0.55)',
+    halo2:           'rgba(178,232,196,0.55)',
+    waveBackFill:    'rgba(140,210,160,0.12)',
+    waveFrontFill:   'rgba(102,180,130,0.18)',
+    waveFrontStroke: 'rgba(70,150,100,0.55)',
+    text:            '#0F3F1A',
+    textSoft:        'rgba(15,63,26,0.65)',
+    badgeDot:        '#46B46E',
+  },
+  near: {
+    cardBg:          '#FFF7E0',
+    cardBorder:      'rgba(220,150,40,0.25)',
+    halo1:           'rgba(255,220,150,0.55)',
+    halo2:           'rgba(255,200,120,0.55)',
+    waveBackFill:    'rgba(245,190,80,0.14)',
+    waveFrontFill:   'rgba(230,165,50,0.22)',
+    waveFrontStroke: 'rgba(200,130,30,0.6)',
+    text:            '#5C3A0A',
+    textSoft:        'rgba(92,58,10,0.65)',
+    badgeDot:        '#E8A030',
+  },
+  over: {
+    cardBg:          '#FFEEEC',
+    cardBorder:      'rgba(220,90,90,0.25)',
+    halo1:           'rgba(255,180,160,0.55)',
+    halo2:           'rgba(245,150,150,0.55)',
+    waveBackFill:    'rgba(240,140,140,0.14)',
+    waveFrontFill:   'rgba(220,110,110,0.22)',
+    waveFrontStroke: 'rgba(190,80,80,0.6)',
+    text:            '#5A1A1A',
+    textSoft:        'rgba(90,26,26,0.65)',
+    badgeDot:        '#E06060',
+  },
+};
 
 function dateLabel(): string {
   const d = new Date();
@@ -68,20 +185,64 @@ function HeaderIconButton({ icon, onPress, accessibilityLabel }: HeaderIconButto
 interface GaugeCardProps {
   ratio: number;
   percent: number;
+  theme: CalorieTheme;
 }
 
-function GaugeCard({ ratio, percent }: GaugeCardProps) {
+function GaugeCard({ ratio, percent, theme }: GaugeCardProps) {
   const progress = useRef(new Animated.Value(0)).current;
+  const wave1 = useRef(new Animated.Value(0)).current;
+  const wave2 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(progress, {
       toValue: Math.min(Math.max(ratio, 0), 1),
-      duration: 1400,
+      duration: 1600,
       delay: 120,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
   }, [ratio, progress]);
+
+  useEffect(() => {
+    const loop1 = Animated.loop(
+      Animated.sequence([
+        Animated.timing(wave1, {
+          toValue: 1,
+          duration: 1100,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+        Animated.timing(wave1, {
+          toValue: 0,
+          duration: 1100,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+      ]),
+    );
+    const loop2 = Animated.loop(
+      Animated.sequence([
+        Animated.timing(wave2, {
+          toValue: 1,
+          duration: 1900,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+        Animated.timing(wave2, {
+          toValue: 0,
+          duration: 1900,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: false,
+        }),
+      ]),
+    );
+    loop1.start();
+    loop2.start();
+    return () => {
+      loop1.stop();
+      loop2.stop();
+    };
+  }, [wave1, wave2]);
 
   const fillHeight = progress.interpolate({
     inputRange: [0, 1],
@@ -94,15 +255,47 @@ function GaugeCard({ ratio, percent }: GaugeCardProps) {
     outputRange: ['6%', '94%'],
   });
 
+  // 두 wave가 반대 방향·다른 속도·다른 진폭으로 출렁 → 교차 효과 극대화
+  const wave1Y = wave1.interpolate({ inputRange: [0, 1], outputRange: [-22, 22] });
+  const wave2Y = wave2.interpolate({ inputRange: [0, 1], outputRange: [20, -20] });
+
   return (
-    <View style={styles.gaugeCard} pointerEvents="none">
+    <View
+      style={[
+        styles.gaugeCard,
+        { backgroundColor: theme.cardBg, borderColor: theme.cardBorder },
+      ]}
+      pointerEvents="none"
+    >
       {/* Soft decorative blobs (under fill) */}
-      <View style={[styles.blob, styles.blobYellow]} />
-      <View style={[styles.blob, styles.blobMint]} />
+      <View style={[styles.blob, styles.blobYellow, { backgroundColor: theme.halo1 }]} />
+      <View style={[styles.blob, styles.blobMint,   { backgroundColor: theme.halo2 }]} />
 
       {/* Animated fill clip */}
       <View style={styles.gaugeClip}>
-        <Animated.View style={[styles.gaugeFill, { height: fillHeight }]} />
+        <Animated.View
+          style={[styles.gaugeFill, { height: fillHeight }]}
+        >
+          {/* wave 두 겹 — sin 표면 + 그 아래로 풀 채움. 어긋난 페이즈로 위·아래 출렁 */}
+          <Animated.View
+            style={[
+              styles.wave,
+              styles.waveBack,
+              { transform: [{ translateY: wave2Y }] },
+            ]}
+          >
+            <WaveSvg fill={theme.waveBackFill} full />
+          </Animated.View>
+          <Animated.View
+            style={[
+              styles.wave,
+              styles.waveFront,
+              { transform: [{ translateY: wave1Y }] },
+            ]}
+          >
+            <WaveSvg fill={theme.waveFrontFill} stroke={theme.waveFrontStroke} full />
+          </Animated.View>
+        </Animated.View>
       </View>
 
       {/* Sparkle decorations */}
@@ -140,10 +333,28 @@ function GaugeCard({ ratio, percent }: GaugeCardProps) {
 
 export function HomeScreen() {
   const { getTodayTotalCalories } = useFoodStore();
+  const dailyCalorieGoal = useUserProfileStore((s) => s.dailyCalorieGoal);
   const totalCalories = getTodayTotalCalories();
-  const remaining = Math.max(TARGET_CALORIES - totalCalories, 0);
-  const ratio = totalCalories / TARGET_CALORIES;
+  const remaining = Math.max(dailyCalorieGoal - totalCalories, 0);
+  const ratio = dailyCalorieGoal > 0 ? totalCalories / dailyCalorieGoal : 0;
   const percent = Math.min(Math.round(ratio * 100), 999);
+  const theme = THEME_BY_STATE[getCalorieState(ratio)];
+
+  // 칼로리 카운트업: 0 → totalCalories (게이지 차오름과 싱크)
+  const calAnim = useRef(new Animated.Value(0)).current;
+  const [displayCal, setDisplayCal] = useState(0);
+  useEffect(() => {
+    const id = calAnim.addListener(({ value }) => setDisplayCal(Math.round(value)));
+    calAnim.setValue(0);
+    Animated.timing(calAnim, {
+      toValue: totalCalories,
+      duration: 1600,
+      delay: 120,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+    return () => calAnim.removeListener(id);
+  }, [totalCalories, calAnim]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -166,31 +377,39 @@ export function HomeScreen() {
 
       {/* ── Hero with Gauge Card Background ── */}
       <View style={styles.hero}>
-        <GaugeCard ratio={ratio} percent={percent} />
+        <GaugeCard ratio={ratio} percent={percent} theme={theme} />
 
         <View style={styles.heroContent}>
           {/* Date label as a pill */}
           <View style={styles.dateBadge}>
-            <View style={styles.dateBadgeDot} />
+            <View style={[styles.dateBadgeDot, { backgroundColor: theme.badgeDot }]} />
             <Text style={styles.dateBadgeText}>{dateLabel()}</Text>
           </View>
 
           <View style={styles.calorieBlock}>
-            <Text style={styles.calorieNumber} numberOfLines={1} adjustsFontSizeToFit>
-              {totalCalories.toLocaleString('ko-KR')}
+            <Text
+              style={[styles.calorieNumber, { color: theme.text }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {displayCal.toLocaleString('ko-KR')}
             </Text>
-            <Text style={styles.calorieUnit}>kcal</Text>
+            <Text style={[styles.calorieUnit, { color: theme.textSoft }]}>kcal</Text>
           </View>
 
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
-              <Text style={styles.metaValue}>{TARGET_CALORIES.toLocaleString('ko-KR')}</Text>
-              <Text style={styles.metaLabel}>목표</Text>
+              <Text style={[styles.metaValue, { color: theme.text }]}>
+                {dailyCalorieGoal.toLocaleString('ko-KR')}
+              </Text>
+              <Text style={[styles.metaLabel, { color: theme.textSoft }]}>목표</Text>
             </View>
             <View style={styles.metaDivider} />
             <View style={styles.metaItem}>
-              <Text style={styles.metaValue}>{remaining.toLocaleString('ko-KR')}</Text>
-              <Text style={styles.metaLabel}>남은 칼로리</Text>
+              <Text style={[styles.metaValue, { color: theme.text }]}>
+                {remaining.toLocaleString('ko-KR')}
+              </Text>
+              <Text style={[styles.metaLabel, { color: theme.textSoft }]}>남은 칼로리</Text>
             </View>
           </View>
         </View>
@@ -275,12 +494,11 @@ const styles = StyleSheet.create({
   },
 
   // ── Gauge Card ──
+  // backgroundColor / borderColor 는 상태별 테마로 인라인 적용
   gaugeCard: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: CARD_RADIUS,
-    backgroundColor: CARD_BG_EMPTY,
     borderWidth: 1,
-    borderColor: CARD_BORDER,
     overflow: 'hidden',
     ...SQUIRCLE,
   },
@@ -292,17 +510,30 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: CARD_BG_FILL,
-    opacity: 0.55,
+    backgroundColor: 'transparent',
+    overflow: 'visible',
+  },
+  wave: {
+    position: 'absolute',
+    width: WAVE_WIDTH,
+    height: WAVE_FILL_DEPTH, // sin 표면 + 그 아래 채움까지 한 컨테이너
+  },
+  waveBack: {
+    top: -WAVE_HEIGHT / 2 - 4,
+    left: -80 + WAVE_BACK_OFFSET, // 30% 좌측 이동 → waveFront와 phase 어긋남
+  },
+  waveFront: {
+    top: -WAVE_HEIGHT / 2 - 12,
+    left: -80,
   },
   blob: {
     position: 'absolute',
     borderRadius: 9999,
   },
+  // blob 배경색은 상태별 테마로 인라인 적용
   blobYellow: {
     width: 220,
     height: 220,
-    backgroundColor: CARD_HALO_1,
     top: -60,
     left: -50,
     opacity: 0.7,
@@ -310,7 +541,6 @@ const styles = StyleSheet.create({
   blobMint: {
     width: 260,
     height: 260,
-    backgroundColor: CARD_HALO_2,
     bottom: -90,
     right: -80,
     opacity: 0.6,

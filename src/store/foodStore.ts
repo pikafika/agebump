@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { type FoodRecord, type GlycemicLevel } from '../types/food';
+import { type FoodRecord, type GlycemicLevel, type MealType } from '../types/food';
 
 const STORAGE_KEY_PREFIX = 'food-records-';
 
@@ -41,6 +41,10 @@ interface FoodState {
   getTodayTotalCalories: () => number;
   /** 오늘 전체 식사의 혈당 영향도 요약 */
   getTodayGlycemicSummary: () => GlycemicLevel;
+  /** ID로 기록 단건 조회 */
+  getRecordById: (id: string) => FoodRecord | undefined;
+  /** AsyncStorage에 저장된 모든 날짜의 기록을 삭제 + 인메모리 비움 */
+  clearAllRecords: () => Promise<void>;
 
   setIsAnalyzing: (value: boolean) => void;
 }
@@ -106,6 +110,21 @@ export const useFoodStore = create<FoodState>()(
         return giToLevel(avgGi);
       },
 
+      getRecordById: (id) => get().records.find((r) => r.id === id),
+
+      clearAllRecords: async () => {
+        try {
+          const keys = await AsyncStorage.getAllKeys();
+          const targets = keys.filter((k) => k.startsWith(STORAGE_KEY_PREFIX));
+          if (targets.length > 0) {
+            await AsyncStorage.multiRemove(targets);
+          }
+        } catch {
+          // 영속화 삭제 실패는 무시 — 인메모리 상태만이라도 비움
+        }
+        set({ records: [] });
+      },
+
       setIsAnalyzing: (value) => set({ isAnalyzing: value }),
     }),
     {
@@ -129,5 +148,50 @@ export async function fetchRecordsByDate(date: string): Promise<FoodRecord[]> {
     return parsed.state?.records ?? [];
   } catch {
     return [];
+  }
+}
+
+/**
+ * 여러 날짜의 식사 기록에서 어떤 식사 유형(MealType)들이 기록되어 있는지만
+ * 일괄 조회한다. 캘린더 도트 표시 등 가벼운 메타 정보용.
+ */
+export async function fetchMealTypesForDates(
+  dates: string[],
+): Promise<Record<string, MealType[]>> {
+  const entries = await Promise.all(
+    dates.map(async (date) => {
+      const records = await fetchRecordsByDate(date);
+      const types = Array.from(new Set(records.map((r) => r.mealType)));
+      return [date, types] as const;
+    }),
+  );
+  return Object.fromEntries(entries);
+}
+
+/**
+ * AsyncStorage에 저장된 특정 날짜의 단일 기록을 부분 업데이트한다.
+ * 인메모리 store와 무관하게 동작하므로 과거 기록에도 사용 가능.
+ * 해당 날짜 데이터가 없거나 ID 매칭이 안 되면 조용히 무시한다.
+ */
+export async function persistUpdateRecord(
+  id: string,
+  timestamp: number,
+  updates: Partial<FoodRecord>,
+): Promise<void> {
+  const dateKey = `${STORAGE_KEY_PREFIX}${toDateString(timestamp)}`;
+  try {
+    const raw = await AsyncStorage.getItem(dateKey);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as { state?: { records?: FoodRecord[] }; version?: number };
+    if (!parsed.state?.records) return;
+    const next = parsed.state.records.map((r) =>
+      r.id === id ? { ...r, ...updates } : r,
+    );
+    await AsyncStorage.setItem(
+      dateKey,
+      JSON.stringify({ ...parsed, state: { ...parsed.state, records: next } }),
+    );
+  } catch {
+    // 영속화 실패 무시
   }
 }

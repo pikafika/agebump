@@ -24,6 +24,10 @@ export interface FoodItem {
   giLevel: GlycemicLevel;
   /** 혈당 스파이크 위험도 (0–100) */
   spikeRisk: number;
+  /** AI 식별 확신도 (0–1). 낮을수록 사용자 정정 유도가 권장됨 */
+  confidence?: number;
+  /** 동일/유사 후보 음식명. 잘못 인식된 경우 빠른 정정 UI에 사용 */
+  alternateNames?: string[];
 }
 
 /** Gemini API 음식 분석 응답 전체 */

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useFonts } from 'expo-font';
 import { Redirect, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
@@ -48,6 +49,11 @@ const queryClient = new QueryClient({
 export function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  // 네이티브: TTF 임베드 로딩. 웹: 아래 @font-face 주입과 병행 (둘 다 동일 family name)
+  const [fontsLoaded, fontError] = useFonts({
+    BRBA_B: require('../assets/fonts/BRBA_B.otf'),
+    BRRA_R: require('../assets/fonts/BRRA_R.otf'),
+  });
 
   useEffect(() => {
     injectWebFontOnce();
@@ -63,10 +69,15 @@ export function RootLayout() {
       });
   }, []);
 
+  useEffect(() => {
+    if (fontError) console.warn('[fonts] BR load error:', fontError);
+    else if (fontsLoaded) console.log('[fonts] BRBA_B, BRRA_R loaded');
+  }, [fontsLoaded, fontError]);
+
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        {!isReady ? (
+        {!isReady || (!fontsLoaded && !fontError) ? (
           <View style={{ flex: 1, backgroundColor: COLORS.background.normalAlternative as string }} />
         ) : (
           <Stack screenOptions={{ headerShown: false }}>
