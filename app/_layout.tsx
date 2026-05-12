@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { COLORS } from '../src/constants/theme';
+import { migrateLegacyUtcKeys, migrateMemosToSecureStore } from '../src/store/migrations';
 import { ONBOARDING_KEY } from './onboarding';
 
 // Web font injection — Baskin Robbins (배스킨라빈스체) via noonnu CDN
@@ -57,6 +58,12 @@ export function RootLayout() {
 
   useEffect(() => {
     injectWebFontOnce();
+    // 1회성 데이터 마이그레이션은 부팅과 병렬로 진행 (성공/실패 모두 부팅 차단하지 않음)
+    // 1) UTC→로컬 키 재그룹핑 → 2) 메모 평문 제거 + secure-store 이전 (순서 중요)
+    void (async () => {
+      await migrateLegacyUtcKeys();
+      await migrateMemosToSecureStore();
+    })();
     AsyncStorage.getItem(ONBOARDING_KEY)
       .then((value: string | null) => {
         setNeedsOnboarding(!value);

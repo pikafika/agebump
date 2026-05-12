@@ -19,6 +19,45 @@ export class GeminiNetworkError extends Error {
   }
 }
 
+/**
+ * HTTP 응답은 받았지만 4xx/5xx로 실패한 경우. fetch 자체가 실패한 진짜 네트워크 오류와 구분된다.
+ * 화면 분기를 위해 GeminiNetworkError를 상속한다.
+ */
+export class GeminiHttpError extends GeminiNetworkError {
+  constructor(
+    status: number,
+    public readonly apiMessage: string,
+    public readonly rawBody: string,
+    public readonly retryDelaySec?: number,
+  ) {
+    super(status, `Gemini API HTTP ${status}: ${apiMessage}`);
+    this.name = 'GeminiHttpError';
+  }
+}
+
+interface ParsedErrorInfo {
+  message: string;
+  retryDelaySec?: number;
+}
+
+function extractGeminiErrorInfo(body: string): ParsedErrorInfo {
+  try {
+    const parsed = JSON.parse(body) as {
+      error?: {
+        message?: string;
+        details?: Array<{ '@type'?: string; retryDelay?: string }>;
+      };
+    };
+    const message = parsed?.error?.message ?? body.slice(0, 200);
+    const retryDetail = parsed?.error?.details?.find((d) => d?.['@type']?.includes('RetryInfo'));
+    const delayMatch = retryDetail?.retryDelay?.match(/^(\d+(?:\.\d+)?)s$/);
+    const retryDelaySec = delayMatch ? Math.ceil(Number(delayMatch[1])) : undefined;
+    return { message, retryDelaySec };
+  } catch {
+    return { message: body.slice(0, 200) };
+  }
+}
+
 export class GeminiParseError extends Error {
   constructor(public readonly raw: string) {
     super('Gemini 응답을 JSON으로 파싱하는 데 실패했습니다.');
@@ -128,7 +167,19 @@ function parseGeminiResponse(text: string): FoodAnalysisResult {
   return obj as unknown as FoodAnalysisResult;
 }
 
-async function callGeminiApi(parts: GeminiPart[]): Promise<string> {
+// 429(quota/rate limit)는 일반적으로 30초+ 대기가 필요해서 자동 재시도가 무의미하고
+// 오히려 quota를 더 빠르게 소진한다. 5xx만 자동 재시도한다.
+const RETRYABLE_STATUS = new Set([500, 502, 503, 504]);
+const MAX_RETRIES = 3;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function callGeminiApiOnce(
+  parts: GeminiPart[],
+  generationConfig: Record<string, unknown>,
+): Promise<string> {
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
   if (!apiKey || apiKey.startsWith('your_')) throw new GeminiApiKeyError();
 
@@ -139,12 +190,7 @@ async function callGeminiApi(parts: GeminiPart[]): Promise<string> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts }],
-        generationConfig: {
-          temperature: 0.2,
-          topP: 0.8,
-          topK: 32,
-          responseMimeType: 'application/json',
-        },
+        generationConfig,
       }),
     });
   } catch (err) {
@@ -152,7 +198,9 @@ async function callGeminiApi(parts: GeminiPart[]): Promise<string> {
   }
 
   if (!response.ok) {
-    throw new GeminiNetworkError(response.status, await response.text());
+    const rawBody = await response.text();
+    const { message, retryDelaySec } = extractGeminiErrorInfo(rawBody);
+    throw new GeminiHttpError(response.status, message, rawBody, retryDelaySec);
   }
 
   const data = (await response.json()) as {
@@ -161,6 +209,46 @@ async function callGeminiApi(parts: GeminiPart[]): Promise<string> {
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new GeminiParseError('');
   return text;
+}
+
+/**
+ * Gemini API를 호출하되, 일시적 과부하(429/5xx)에 대해 지수 백오프로 재시도한다.
+ * 재시도 가능한 상태가 아닌 에러는 즉시 던진다.
+ */
+async function callGeminiApi(
+  parts: GeminiPart[],
+  generationConfig: Record<string, unknown> = {
+    temperature: 0.2,
+    topP: 0.8,
+    topK: 32,
+    responseMimeType: 'application/json',
+  },
+): Promise<string> {
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt += 1) {
+    try {
+      return await callGeminiApiOnce(parts, generationConfig);
+    } catch (err) {
+      lastErr = err;
+      // 재시도 대상:
+      //  - HTTP 429/5xx (서버 일시 과부하)
+      //  - raw fetch 실패 (GeminiNetworkError 본체, 즉 GeminiHttpError가 아닌 경우)
+      //    → Gemini가 과부하 시 연결 자체를 끊는 경우가 있어 RN에서 'Network request failed'로 나타남
+      const isHttp = err instanceof GeminiHttpError;
+      const isRetryable = isHttp
+        ? RETRYABLE_STATUS.has(err.status ?? 0)
+        : err instanceof GeminiNetworkError;
+      const hasMoreAttempts = attempt < MAX_RETRIES - 1;
+      if (!isRetryable || !hasMoreAttempts) throw err;
+      const backoffMs = 800 * Math.pow(2, attempt) + Math.floor(Math.random() * 300);
+      const reason = isHttp ? `status=${(err as GeminiHttpError).status}` : 'fetch-failed';
+      console.warn(
+        `[gemini] retry ${attempt + 1}/${MAX_RETRIES - 1} after ${backoffMs}ms (${reason})`,
+      );
+      await delay(backoffMs);
+    }
+  }
+  throw lastErr ?? new GeminiNetworkError(undefined, 'Gemini API 호출에 실패했습니다.');
 }
 
 // ─── 공개 API ──────────────────────────────────────────────────────────────────
@@ -269,9 +357,6 @@ function parseGuideResponse(text: string): AIGuide {
  * 호출 측(guide.tsx의 startTyping)에서 처리한다.
  */
 export async function generateGuide(records: FoodRecord[]): Promise<AIGuide> {
-  const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-  if (!apiKey || apiKey.startsWith('your_')) throw new GeminiApiKeyError();
-
   const allFoods = records.flatMap((r) =>
     r.foods.map((f) => ({ name: f.name, calories: f.calories, giLevel: f.giLevel })),
   );
@@ -289,33 +374,11 @@ export async function generateGuide(records: FoodRecord[]): Promise<AIGuide> {
   const dataSummary = JSON.stringify({ foods: allFoods, totalCalories, overallGiLevel }, null, 2);
   const prompt = `${GUIDE_PROMPT}\n\n데이터:\n${dataSummary}`;
 
-  let response: Response;
-  try {
-    response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.4,
-          topP: 0.9,
-          topK: 32,
-          responseMimeType: 'application/json',
-        },
-      }),
-    });
-  } catch (err) {
-    throw new GeminiNetworkError(undefined, (err as Error).message);
-  }
-
-  if (!response.ok) {
-    throw new GeminiNetworkError(response.status, await response.text());
-  }
-
-  const data = (await response.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-  };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-  if (!text) throw new GeminiParseError('');
+  const text = await callGeminiApi([{ text: prompt }], {
+    temperature: 0.4,
+    topP: 0.9,
+    topK: 32,
+    responseMimeType: 'application/json',
+  });
   return parseGuideResponse(text);
 }

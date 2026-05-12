@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   GeminiApiKeyError,
+  GeminiHttpError,
   GeminiNetworkError,
   GeminiParseError,
   generateGuide,
@@ -83,10 +84,12 @@ export function GuideScreen() {
   const [hasCachedGuide, setHasCachedGuide] = useState(false);
   const [isLoading, setLoading] = useState(true);
   const [error, setError]       = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [displayed, setDisplayed] = useState<Displayed>({
     immediateAction: '', nextMealSuggestion: '', dailySummary: '',
   });
   const timersRef = useRef<number[]>([]);
+  const inFlightRef = useRef(false);
 
   function clearTimers() { timersRef.current.forEach(clearTimeout); timersRef.current = []; }
 
@@ -163,27 +166,51 @@ export function GuideScreen() {
   }, [contextRecords]);
 
   async function runGuide(records: FoodRecord[]) {
+    if (inFlightRef.current) {
+      console.log('[guide] runGuide skipped — already in flight');
+      return;
+    }
+    inFlightRef.current = true;
     setLoading(true);
     setError(null);
+    setErrorDetail(null);
     setHasCachedGuide(false);
     try {
       const g = await generateGuide(records);
       setGuide(g);
       startTyping(g);
     } catch (err) {
-      console.warn('[guide] generateGuide failed:', err);
+      console.error('[guide] generateGuide failed:', err);
       if (err instanceof GeminiApiKeyError) {
         setError('API 키가 설정되지 않았습니다. .env의 EXPO_PUBLIC_GEMINI_API_KEY를 확인해주세요.');
+      } else if (err instanceof GeminiHttpError) {
+        const isAuth = err.status === 401 || err.status === 403;
+        const isRate = err.status === 429;
+        const retryHint =
+          isRate && err.retryDelaySec
+            ? ` 약 ${err.retryDelaySec}초 뒤에 다시 시도해주세요.`
+            : ' 잠시 후 다시 시도해주세요.';
+        const userMsg = isAuth
+          ? 'API 키 권한 문제로 분석에 실패했어요. 설정을 확인해주세요.'
+          : isRate
+            ? `AI 사용량(무료 티어 일일 한도)을 초과했어요.${retryHint}`
+            : (err.status ?? 0) >= 500
+              ? 'AI 서버 일시 오류예요. 잠시 후 다시 시도해주세요.'
+              : '요청을 처리하지 못했어요. 잠시 후 다시 시도해주세요.';
+        setError(userMsg);
+        setErrorDetail(`HTTP ${err.status} · ${err.apiMessage}`);
       } else if (err instanceof GeminiNetworkError) {
-        const detail = err.status ? ` (status ${err.status})` : '';
-        setError(`네트워크 오류가 발생했습니다${detail}. 잠시 후 다시 시도해주세요.`);
+        setError('네트워크 연결을 확인해주세요. Wi-Fi 또는 모바일 데이터가 활성화되어 있어야 해요.');
+        setErrorDetail(err.message);
       } else if (err instanceof GeminiParseError) {
         setError('AI 응답을 해석하지 못했어요. 다시 시도해주세요.');
       } else {
         setError('AI 가이드를 생성할 수 없었습니다. 잠시 후 다시 시도해주세요.');
+        setErrorDetail(err instanceof Error ? err.message : String(err));
       }
     } finally {
       setLoading(false);
+      inFlightRef.current = false;
     }
   }
 
@@ -236,15 +263,16 @@ export function GuideScreen() {
   const screenTitle = recordId ? 'AI 가이드' : '오늘의 혈당 리포트';
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backLabel}>← 돌아가기</Text>
-          </TouchableOpacity>
-          <Text style={styles.screenTitle}>{screenTitle}</Text>
-        </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.headerSide}>
+          <Text style={styles.headerClose}>×</Text>
+        </Pressable>
+        <Text style={styles.headerTitle}>{screenTitle}</Text>
+        <View style={styles.headerSide} />
+      </View>
 
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={[styles.summaryCard, { backgroundColor: GLYCEMIC_COLOR[summary.giLevel] }]}>
           <Text style={styles.summaryGiLabel}>혈당 영향도</Text>
           <Text style={styles.summaryGiValue}>{LEVEL_KO[summary.giLevel]}</Text>
@@ -264,6 +292,7 @@ export function GuideScreen() {
         {error && (
           <View style={styles.errorCard}>
             <Text style={styles.errorText}>{error}</Text>
+            {errorDetail ? <Text style={styles.errorDetail}>{errorDetail}</Text> : null}
             <MontageButton
               label="다시 시도"
               onPress={() => contextRecords && runGuide(contextRecords)}
@@ -305,9 +334,17 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background.normalAlternative },
   scroll: { paddingHorizontal: SPACING.pt20, paddingBottom: SPACING.pt48, gap: SPACING.pt16 },
 
-  header: { paddingTop: SPACING.pt08, gap: SPACING.pt08 },
-  backLabel: { ...TYPOGRAPHY.label1, color: COLORS.primary.normal, fontWeight: FONT_WEIGHT.medium },
-  screenTitle: { ...TYPOGRAPHY.title3, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.bold },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.pt20,
+    paddingTop: SPACING.pt08,
+    paddingBottom: SPACING.pt12,
+  },
+  headerSide: { width: 32, alignItems: 'center' },
+  headerClose: { fontSize: 26, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.medium, lineHeight: 28 },
+  headerTitle: { ...TYPOGRAPHY.heading2, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.bold },
 
   summaryCard: {
     borderRadius: RADIUS.extraLarge,
@@ -334,6 +371,7 @@ const styles = StyleSheet.create({
     ...SQUIRCLE,
   },
   errorText: { ...TYPOGRAPHY.body2, color: COLORS.label.normal },
+  errorDetail: { ...TYPOGRAPHY.caption1, color: COLORS.label.assistive, lineHeight: 18 },
 
   actionsCol: { gap: SPACING.pt08 },
   guideCard: { gap: SPACING.pt12 },

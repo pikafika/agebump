@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { analyzeFood, analyzeFoodText, GeminiNetworkError } from '../src/api/gemini';
+import { analyzeFood, analyzeFoodText, GeminiHttpError, GeminiNetworkError } from '../src/api/gemini';
 import { GlycemicGauge } from '../src/components/food/GlycemicGauge';
 import { NutritionBar } from '../src/components/food/NutritionBar';
 import { MontageButton } from '../src/components/montage/MontageButton';
@@ -30,6 +30,7 @@ import {
   TYPOGRAPHY,
 } from '../src/constants/theme';
 import { useFoodStore } from '../src/store/foodStore';
+import { getMemo, setMemo as persistMemo } from '../src/store/memoStore';
 import { type FoodAnalysisResult, type FoodItem, type FoodRecord, type MealType } from '../src/types/food';
 import { imageToBase64 } from '../src/utils/imageUtils';
 
@@ -57,13 +58,14 @@ function SkeletonView() {
   );
 }
 
-interface ErrorViewProps { message: string; isNetwork: boolean; onRetry: () => void }
-function ErrorView({ message, isNetwork, onRetry }: ErrorViewProps) {
+interface ErrorViewProps { message: string; detail?: string; isNetwork: boolean; onRetry: () => void }
+function ErrorView({ message, detail, isNetwork, onRetry }: ErrorViewProps) {
   return (
     <View style={styles.errorWrap}>
       <Text style={styles.errorEmoji}>{isNetwork ? '📡' : '🔍'}</Text>
       <Text style={styles.errorTitle}>{isNetwork ? '연결 실패' : '인식 실패'}</Text>
       <Text style={styles.errorBody}>{message}</Text>
+      {detail ? <Text style={styles.errorDetail}>{detail}</Text> : null}
       <MontageButton
         label={isNetwork ? '다시 시도' : '재촬영하기'}
         onPress={onRetry}
@@ -71,6 +73,37 @@ function ErrorView({ message, isNetwork, onRetry }: ErrorViewProps) {
       />
     </View>
   );
+}
+
+function describeError(err: unknown): { isNetwork: boolean; message: string; detail: string } {
+  if (err instanceof GeminiHttpError) {
+    const isAuth = err.status === 401 || err.status === 403;
+    const isRate = err.status === 429;
+    const retryHint =
+      isRate && err.retryDelaySec
+        ? ` 약 ${err.retryDelaySec}초 뒤에 다시 시도해주세요.`
+        : ' 잠시 후 다시 시도해주세요.';
+    const userMsg = isAuth
+      ? 'API 키 권한 문제로 분석에 실패했어요. 설정을 확인해주세요.'
+      : isRate
+        ? `AI 사용량(무료 티어 일일 한도)을 초과했어요.${retryHint}`
+        : (err.status ?? 0) >= 500
+          ? 'AI 서버 일시 오류예요. 잠시 후 다시 시도해주세요.'
+          : '요청을 처리하지 못했어요. 다른 사진/음식명으로 시도해주세요.';
+    return { isNetwork: true, message: userMsg, detail: `HTTP ${err.status} · ${err.apiMessage}` };
+  }
+  if (err instanceof GeminiNetworkError) {
+    return {
+      isNetwork: true,
+      message: '네트워크 연결을 확인해주세요. Wi-Fi 또는 모바일 데이터가 활성화되어 있어야 해요.',
+      detail: err.message,
+    };
+  }
+  return {
+    isNetwork: false,
+    message: '음식을 인식할 수 없어요. 다시 시도해주세요.',
+    detail: err instanceof Error ? err.message : String(err),
+  };
 }
 
 const MEAL_OPTIONS: { type: MealType; label: string; icon: string }[] = [
@@ -162,6 +195,7 @@ export function AnalysisScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isNetworkError, setIsNetworkError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [memo, setMemo] = useState('');
   const [mealType, setMealType] = useState<MealType>(detectMealType);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -170,6 +204,7 @@ export function AnalysisScreen() {
   async function runAnalysis() {
     setIsLoading(true);
     setErrorMessage(null);
+    setErrorDetail(null);
     setIsNetworkError(false);
     setIsAnalyzing(true);
     try {
@@ -187,7 +222,10 @@ export function AnalysisScreen() {
           overallGiLevel: levelFromGi(avgGi),
           disclaimer: 'AI 추정값으로 참고용입니다.',
         };
-        if (saved.memo) setMemo(saved.memo);
+        // 메모는 secure-store에서 비동기 로드. 레거시 record.memo도 보조 fallback.
+        const securedMemo = await getMemo(saved.id);
+        if (securedMemo) setMemo(securedMemo);
+        else if (saved.memo) setMemo(saved.memo);
         setMealType(saved.mealType);
       } else if (imageUri) {
         const base64 = await imageToBase64(decodeURIComponent(imageUri));
@@ -197,15 +235,18 @@ export function AnalysisScreen() {
       } else {
         throw new Error('이미지 또는 음식명이 필요합니다.');
       }
-      if (res.error) setErrorMessage(res.error);
-      else setResult(res);
+      if (res.error) {
+        setErrorMessage(res.error);
+        setIsNetworkError(false);
+      } else {
+        setResult(res);
+      }
     } catch (err) {
-      setIsNetworkError(err instanceof GeminiNetworkError);
-      setErrorMessage(
-        err instanceof GeminiNetworkError
-          ? '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.'
-          : '음식을 인식할 수 없어요. 다시 시도해주세요.',
-      );
+      console.error('[analysis] runAnalysis failed:', err);
+      const { isNetwork, message, detail } = describeError(err);
+      setIsNetworkError(isNetwork);
+      setErrorMessage(message);
+      setErrorDetail(detail);
     } finally {
       setIsLoading(false);
       setIsAnalyzing(false);
@@ -222,39 +263,53 @@ export function AnalysisScreen() {
     if (!name || name === currentName) return;
     setIsLoading(true);
     setErrorMessage(null);
+    setErrorDetail(null);
     setIsNetworkError(false);
     setIsAnalyzing(true);
     try {
       const res = await analyzeFoodText(name);
-      if (res.error) setErrorMessage(res.error);
-      else setResult(res);
+      if (res.error) {
+        setErrorMessage(res.error);
+        setIsNetworkError(false);
+      } else {
+        setResult(res);
+      }
     } catch (err) {
-      setIsNetworkError(err instanceof GeminiNetworkError);
-      setErrorMessage(
-        err instanceof GeminiNetworkError
-          ? '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.'
-          : '음식을 인식할 수 없어요. 다시 시도해주세요.',
-      );
+      console.error('[analysis] handleNameSubmit failed:', err);
+      const { isNetwork, message, detail } = describeError(err);
+      setIsNetworkError(isNetwork);
+      setErrorMessage(message);
+      setErrorDetail(detail);
     } finally {
       setIsLoading(false);
       setIsAnalyzing(false);
     }
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!result) return;
+    const newId = Date.now().toString();
     const record: FoodRecord = {
-      id: Date.now().toString(),
+      id: newId,
       timestamp: Date.now(),
       mealType,
       foods: result.foods,
       imageUri: imageUri ? decodeURIComponent(imageUri) : undefined,
-      memo: memo.trim() || undefined,
     };
     addRecord(record);
+    // 메모는 별도 secure-store에 저장 (record envelope에는 평문으로 남기지 않음)
+    if (memo.trim().length > 0) {
+      await persistMemo(newId, memo);
+    }
     Alert.alert('저장 완료', '식사 기록이 저장되었습니다.', [
       { text: '확인', onPress: () => router.replace('/(tabs)') },
     ]);
+  }
+
+  // 이미 저장된 기록의 메모 편집 시 blur 시점에 secure-store에 즉시 반영
+  function handleMemoBlur(): void {
+    if (!isViewingSaved || !recordId) return;
+    void persistMemo(recordId, memo);
   }
 
   const savedRecord = recordId ? getRecordById(recordId) : undefined;
@@ -277,6 +332,7 @@ export function AnalysisScreen() {
       <SafeAreaView style={styles.container}>
         <ErrorView
           message={errorMessage}
+          detail={errorDetail ?? undefined}
           isNetwork={isNetworkError}
           onRetry={isNetworkError ? runAnalysis : () => router.back()}
         />
@@ -383,6 +439,7 @@ export function AnalysisScreen() {
             style={styles.memoInput}
             value={memo}
             onChangeText={setMemo}
+            onBlur={handleMemoBlur}
             placeholder="오늘 식사에 대해 기록해두세요 (선택)"
             placeholderTextColor={COLORS.label.assistive as string}
             multiline
@@ -457,6 +514,14 @@ const styles = StyleSheet.create({
   errorEmoji: { fontSize: 52, marginBottom: SPACING.pt08 },
   errorTitle: { ...TYPOGRAPHY.heading2, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.bold },
   errorBody: { ...TYPOGRAPHY.body2, color: COLORS.label.alternative, textAlign: 'center', lineHeight: 22 },
+  errorDetail: {
+    ...TYPOGRAPHY.caption1,
+    color: COLORS.label.assistive,
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: SPACING.pt08,
+    marginTop: SPACING.pt04,
+  },
 
   header: {
     flexDirection: 'row',

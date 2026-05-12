@@ -66,8 +66,12 @@ export interface FoodRecord {
   foods: FoodItem[];
   /** 촬영한 음식 이미지의 로컬 URI */
   imageUri?: string;
-  /** 사용자 메모 */
-  memo?: string;
   /** AI 가이드 결과 */
   aiGuide?: AIGuide;
+  /**
+   * @deprecated 메모는 더 이상 record에 저장되지 않고 expo-secure-store에 분리 저장된다.
+   * 기존 데이터 호환을 위해 타입에 남겨두지만 신규 코드에서는 사용하지 말 것.
+   * memoStore.getMemo(record.id) / setMemo(record.id, text) 사용.
+   */
+  memo?: string;
 }

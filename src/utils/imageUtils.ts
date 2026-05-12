@@ -36,7 +36,11 @@ export async function imageToBase64(uri: string): Promise<string> {
     const file = new File(uri);
     const base64 = await file.base64();
     const prefixPattern = /^data:image\/[a-z]+;base64,/;
-    return base64.replace(prefixPattern, '');
+    const cleaned = base64.replace(prefixPattern, '');
+    if (!cleaned || cleaned.length < 100) {
+      throw new Error(`base64 변환 결과가 비어 있거나 너무 짧습니다 (length=${cleaned.length}).`);
+    }
+    return cleaned;
   } catch (err) {
     throw new Error(
       `이미지를 base64로 변환하는 데 실패했습니다: ${err instanceof Error ? err.message : '알 수 없는 오류'}`,

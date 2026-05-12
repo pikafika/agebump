@@ -2,16 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { type FoodRecord, type GlycemicLevel, type MealType } from '../types/food';
+import { toDateString, todayString } from '../utils/dateUtils';
 
-const STORAGE_KEY_PREFIX = 'food-records-';
-
-function toDateString(timestamp: number): string {
-  return new Date(timestamp).toISOString().slice(0, 10); // 'YYYY-MM-DD'
-}
-
-function todayString(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+// 'food-records-YYYY-MM-DD' (로컬 날짜) 형식으로 AsyncStorage에 저장한다.
+// 과거에는 toISOString() 기반 UTC 키를 잘못 사용해 KST 자정~09시 기록이
+// 다음날 사라지는 버그가 있었음 → migrations.ts의 1회성 마이그레이션으로 복구.
+export const STORAGE_KEY_PREFIX = 'food-records-';
 
 /** 평균 GI 값을 GlycemicLevel로 변환 */
 function giToLevel(avgGi: number): GlycemicLevel {
@@ -152,6 +148,24 @@ export async function fetchRecordsByDate(date: string): Promise<FoodRecord[]> {
 }
 
 /**
+ * AsyncStorage를 스캔해서 기록이 한 건이라도 저장된 날짜들을
+ * 'YYYY-MM-DD' 오름차순(과거→최근)으로 반환한다.
+ * 빈 결과(저장된 기록 없음)도 정상으로 간주.
+ */
+export async function fetchAllRecordedDates(): Promise<string[]> {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    return keys
+      .filter((k) => k.startsWith(STORAGE_KEY_PREFIX))
+      .map((k) => k.slice(STORAGE_KEY_PREFIX.length))
+      .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+/**
  * 여러 날짜의 식사 기록에서 어떤 식사 유형(MealType)들이 기록되어 있는지만
  * 일괄 조회한다. 캘린더 도트 표시 등 가벼운 메타 정보용.
  */
@@ -187,6 +201,34 @@ export async function persistUpdateRecord(
     const next = parsed.state.records.map((r) =>
       r.id === id ? { ...r, ...updates } : r,
     );
+    await AsyncStorage.setItem(
+      dateKey,
+      JSON.stringify({ ...parsed, state: { ...parsed.state, records: next } }),
+    );
+  } catch {
+    // 영속화 실패 무시
+  }
+}
+
+/**
+ * AsyncStorage에 저장된 특정 날짜의 단일 기록을 영구 삭제한다.
+ * 인메모리 store와 무관하게 동작하므로 과거 기록에도 사용 가능.
+ */
+export async function persistDeleteRecord(
+  id: string,
+  timestamp: number,
+): Promise<void> {
+  const dateKey = `${STORAGE_KEY_PREFIX}${toDateString(timestamp)}`;
+  try {
+    const raw = await AsyncStorage.getItem(dateKey);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as { state?: { records?: FoodRecord[] }; version?: number };
+    if (!parsed.state?.records) return;
+    const next = parsed.state.records.filter((r) => r.id !== id);
+    if (next.length === 0) {
+      await AsyncStorage.removeItem(dateKey);
+      return;
+    }
     await AsyncStorage.setItem(
       dateKey,
       JSON.stringify({ ...parsed, state: { ...parsed.state, records: next } }),

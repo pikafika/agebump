@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Image,
@@ -23,14 +23,19 @@ import {
 import {
   fetchMealTypesForDates,
   fetchRecordsByDate,
+  persistDeleteRecord,
   useFoodStore,
 } from '../../src/store/foodStore';
 import { type FoodRecord, type MealType } from '../../src/types/food';
 import {
   WEEKDAY_INITIALS_EN,
+  addMonthsClamped,
+  datesInMonth,
+  firstWeekdayOffset,
+  formatMonthLabelKO,
   formatTimeAMPM,
-  thisWeekDates,
   todayString,
+  weekContaining,
 } from '../../src/utils/dateUtils';
 import { nutritionTagsFor } from '../../src/utils/nutritionTags';
 
@@ -72,16 +77,14 @@ function representativeFoodLabel(record: FoodRecord): string {
 
 interface DateCellProps {
   iso: string;
-  weekdayInitial: string;
   selected: boolean;
   mealTypes: MealType[];
   onPress: () => void;
 }
-function DateCell({ iso, weekdayInitial, selected, mealTypes, onPress }: DateCellProps) {
+function DateCell({ iso, selected, mealTypes, onPress }: DateCellProps) {
   const day = Number(iso.split('-')[2]);
   return (
     <Pressable onPress={onPress} style={styles.dateCell} hitSlop={6}>
-      <Text style={styles.dateWeekday}>{weekdayInitial}</Text>
       <View style={[styles.dateBubble, selected && styles.dateBubbleActive]}>
         <Text style={[styles.dateNumber, selected && styles.dateNumberActive]}>
           {day}
@@ -103,8 +106,10 @@ interface RecordCardProps {
   record: FoodRecord;
   onPress: () => void;
   onLongPress?: () => void;
+  isEditMode?: boolean;
+  onDelete?: () => void;
 }
-function RecordCard({ record, onPress, onLongPress }: RecordCardProps) {
+function RecordCard({ record, onPress, onLongPress, isEditMode, onDelete }: RecordCardProps) {
   const cals = totalCalories(record);
   const mealColor = MEAL_COLORS[record.mealType];
   const tags = nutritionTagsFor(record);
@@ -112,10 +117,13 @@ function RecordCard({ record, onPress, onLongPress }: RecordCardProps) {
 
   return (
     <Pressable
-      onPress={onPress}
-      onLongPress={onLongPress}
+      onPress={isEditMode ? undefined : onPress}
+      onLongPress={isEditMode ? undefined : onLongPress}
       delayLongPress={400}
-      style={({ pressed }) => [styles.cardPress, pressed && styles.cardPressed]}
+      style={({ pressed }) => [
+        styles.cardPress,
+        !isEditMode && pressed && styles.cardPressed,
+      ]}
     >
       <MontageCard style={styles.recordCard}>
         <View style={styles.cardLeft}>
@@ -153,32 +161,79 @@ function RecordCard({ record, onPress, onLongPress }: RecordCardProps) {
             </View>
           )}
         </View>
+        {isEditMode && (
+          <Pressable
+            style={styles.deleteBadge}
+            onPress={onDelete}
+            hitSlop={10}
+            accessibilityLabel="기록 삭제"
+          >
+            <Text style={styles.deleteBadgeText}>×</Text>
+          </Pressable>
+        )}
       </MontageCard>
     </Pressable>
   );
 }
 
 export function HistoryScreen() {
-  const weekDates = thisWeekDates();
-  const [selectedDate, setSelectedDate] = useState<string>(todayString());
+  const today = todayString();
+  const [selectedDate, setSelectedDate] = useState<string>(today);
   const [pastRecords, setPastRecords] = useState<FoodRecord[]>([]);
   const [isLoadingPast, setIsLoadingPast] = useState(false);
-  const [weekMealTypes, setWeekMealTypes] = useState<Record<string, MealType[]>>({});
+  const [calendarMealTypes, setCalendarMealTypes] = useState<Record<string, MealType[]>>({});
+  const [isMonthExpanded, setIsMonthExpanded] = useState(false);
+  const [viewMonthAnchor, setViewMonthAnchor] = useState<string>(today);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const todayRecords = useFoodStore((s) => s.records);
   const deleteRecord = useFoodStore((s) => s.deleteRecord);
 
-  const isToday = selectedDate === todayString();
+  const isToday = selectedDate === today;
 
-  // 주간 캘린더 도트 데이터
+  // 캘린더에 표시되는 날짜 집합 — 접힘: 선택 주, 펼침: 보고 있는 달
+  const weekDates = useMemo(() => weekContaining(selectedDate), [selectedDate]);
+  const monthDates = useMemo(() => datesInMonth(viewMonthAnchor), [viewMonthAnchor]);
+  const monthOffset = useMemo(() => firstWeekdayOffset(viewMonthAnchor), [viewMonthAnchor]);
+  const monthLabelDate = isMonthExpanded ? viewMonthAnchor : selectedDate;
+  const monthLabel = useMemo(
+    () => formatMonthLabelKO(monthLabelDate),
+    [monthLabelDate],
+  );
+
+  // 도트 데이터: 현재 보고 있는 범위에 맞춰 일괄 로드
   useEffect(() => {
+    const targets = isMonthExpanded ? monthDates : weekDates;
     let cancelled = false;
-    fetchMealTypesForDates(weekDates).then((map) => {
-      if (!cancelled) setWeekMealTypes(map);
+    fetchMealTypesForDates(targets).then((map) => {
+      if (!cancelled) setCalendarMealTypes((prev) => ({ ...prev, ...map }));
     });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayRecords.length]);
+  }, [isMonthExpanded, monthDates, weekDates]);
+
+  // 펼침 모드 진입 시 보고 있는 달을 선택 날짜의 달로 동기화
+  useEffect(() => {
+    if (isMonthExpanded) setViewMonthAnchor(selectedDate);
+  }, [isMonthExpanded, selectedDate]);
+
+  // 오늘 기록 변동 시 도트 갱신
+  useEffect(() => {
+    if (!isToday) return;
+    setCalendarMealTypes((prev) => ({ ...prev }));
+  }, [todayRecords.length, isToday]);
+
+  function handleSelectDate(iso: string): void {
+    setSelectedDate(iso);
+    setIsMonthExpanded(false);
+  }
+  function handleShiftMonth(delta: number): void {
+    setViewMonthAnchor((cur) => addMonthsClamped(cur, delta));
+  }
+  function handleJumpToThisWeek(): void {
+    setSelectedDate(today);
+    setViewMonthAnchor(today);
+    setIsMonthExpanded(false);
+  }
 
   // 선택한 날짜의 기록 로드 (오늘이 아닐 때)
   useEffect(() => {
@@ -193,6 +248,11 @@ export function HistoryScreen() {
       .finally(() => { if (!cancelled) setIsLoadingPast(false); });
     return () => { cancelled = true; };
   }, [selectedDate, isToday]);
+
+  // 날짜를 바꾸면 수정 모드는 자동 종료
+  useEffect(() => {
+    setIsEditMode(false);
+  }, [selectedDate]);
 
   const records = isToday ? todayRecords : pastRecords;
 
@@ -216,35 +276,138 @@ export function HistoryScreen() {
     [deleteRecord],
   );
 
+  // 수정 모드 삭제: 오늘이면 store에서 삭제, 과거면 AsyncStorage에서 직접 삭제
+  const handleDeleteInEditMode = useCallback(
+    (record: FoodRecord) => {
+      Alert.alert(
+        '기록 삭제',
+        '이 식사 기록을 삭제할까요? 되돌릴 수 없습니다.',
+        [
+          { text: '취소', style: 'cancel' },
+          {
+            text: '삭제',
+            style: 'destructive',
+            onPress: () => {
+              if (isToday) {
+                deleteRecord(record.id);
+              } else {
+                setPastRecords((prev) => prev.filter((r) => r.id !== record.id));
+                persistDeleteRecord(record.id, record.timestamp);
+              }
+            },
+          },
+        ],
+      );
+    },
+    [deleteRecord, isToday],
+  );
+
+  const canEnterEditMode = orderedRecords.length > 0;
+  const trailingButton = isEditMode ? (
+    <Pressable hitSlop={12} style={styles.headerSide} onPress={() => setIsEditMode(false)}>
+      <Text style={styles.headerDone}>완료</Text>
+    </Pressable>
+  ) : (
+    <Pressable
+      hitSlop={12}
+      style={styles.headerSide}
+      onPress={() => canEnterEditMode && setIsEditMode(true)}
+      disabled={!canEnterEditMode}
+    >
+      <Text style={[styles.headerDots, !canEnterEditMode && styles.headerDotsDisabled]}>⋮</Text>
+    </Pressable>
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.headerSide}>
+        <Pressable
+          onPress={() => (isEditMode ? setIsEditMode(false) : router.back())}
+          hitSlop={12}
+          style={styles.headerSide}
+        >
           <Text style={styles.headerArrow}>←</Text>
         </Pressable>
-        <Text style={styles.title}>식단 일기</Text>
-        <Pressable hitSlop={12} style={styles.headerSide} onPress={() => {}}>
-          <Text style={styles.headerDots}>⋮</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.calendarRow}>
-        {weekDates.map((iso, idx) => (
-          <DateCell
-            key={iso}
-            iso={iso}
-            weekdayInitial={WEEKDAY_INITIALS_EN[idx]}
-            selected={iso === selectedDate}
-            mealTypes={weekMealTypes[iso] ?? []}
-            onPress={() => setSelectedDate(iso)}
-          />
-        ))}
+        <Text style={styles.title}>{isEditMode ? '기록 편집' : '식단 일기'}</Text>
+        {trailingButton}
       </View>
 
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.calendarWrap}>
+          <Pressable
+            style={styles.calendarHeader}
+            onPress={() => setIsMonthExpanded((v) => !v)}
+            hitSlop={8}
+          >
+            <Text style={styles.calendarChevron}>{isMonthExpanded ? '⌃' : '⌄'}</Text>
+            <Text style={styles.calendarMonth}>{monthLabel}</Text>
+          </Pressable>
+
+          <View style={styles.weekdayHeaderRow}>
+            {WEEKDAY_INITIALS_EN.map((w, i) => (
+              <Text key={`${w}-${i}`} style={styles.weekdayHeader}>{w}</Text>
+            ))}
+          </View>
+
+          {!isMonthExpanded ? (
+            <View style={styles.weekStrip}>
+              {weekDates.map((iso) => (
+                <DateCell
+                  key={iso}
+                  iso={iso}
+                  selected={iso === selectedDate}
+                  mealTypes={calendarMealTypes[iso] ?? []}
+                  onPress={() => handleSelectDate(iso)}
+                />
+              ))}
+            </View>
+          ) : (
+            <>
+              <View style={styles.monthGrid}>
+                {Array.from({ length: monthOffset }).map((_, i) => (
+                  <View key={`pad-${i}`} style={styles.gridCell} />
+                ))}
+                {monthDates.map((iso) => (
+                  <View key={iso} style={styles.gridCell}>
+                    <DateCell
+                      iso={iso}
+                      selected={iso === selectedDate}
+                      mealTypes={calendarMealTypes[iso] ?? []}
+                      onPress={() => handleSelectDate(iso)}
+                    />
+                  </View>
+                ))}
+              </View>
+              <View style={styles.monthNav}>
+                <Pressable
+                  onPress={() => handleShiftMonth(-1)}
+                  hitSlop={8}
+                  style={styles.monthNavBtn}
+                >
+                  <Text style={styles.monthNavText}>← 이전 월</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleJumpToThisWeek}
+                  hitSlop={8}
+                  style={styles.monthNavBtn}
+                >
+                  <Text style={[styles.monthNavText, styles.monthNavPrimary]}>이번 주로</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => handleShiftMonth(1)}
+                  hitSlop={8}
+                  style={styles.monthNavBtn}
+                >
+                  <Text style={styles.monthNavText}>다음 월 →</Text>
+                </Pressable>
+              </View>
+            </>
+          )}
+        </View>
+
         {isLoadingPast && (
           <View style={styles.skeletonWrap}>
             {[0, 1, 2].map((i) => (
@@ -278,8 +441,10 @@ export function HistoryScreen() {
           <RecordCard
             key={record.id}
             record={record}
+            isEditMode={isEditMode}
             onPress={() => router.push(`/analysis?recordId=${record.id}`)}
-            onLongPress={isToday ? () => handleDelete(record.id) : undefined}
+            onLongPress={isToday && !isEditMode ? () => handleDelete(record.id) : undefined}
+            onDelete={() => handleDeleteInEditMode(record)}
           />
         ))}
       </ScrollView>
@@ -298,27 +463,85 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.pt08,
     paddingBottom: SPACING.pt12,
   },
-  headerSide: { width: 32, alignItems: 'center' },
+  headerSide: { width: 48, alignItems: 'center' },
   headerArrow: { fontSize: 22, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.medium },
   headerDots:  { fontSize: 22, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.medium },
+  headerDotsDisabled: { opacity: 0.3 },
+  headerDone: {
+    ...TYPOGRAPHY.label1,
+    color: COLORS.primary.normal,
+    fontWeight: FONT_WEIGHT.semiBold,
+  },
   title: { ...TYPOGRAPHY.heading2, color: COLORS.label.normal, fontWeight: FONT_WEIGHT.bold },
 
-  calendarRow: {
+  calendarWrap: {
+    paddingVertical: SPACING.pt08,
+    marginBottom: SPACING.pt04,
+    gap: SPACING.pt08,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    paddingVertical: 4,
+  },
+  calendarChevron: {
+    ...TYPOGRAPHY.label1,
+    color: COLORS.label.alternative,
+    fontWeight: FONT_WEIGHT.semiBold,
+    lineHeight: 16,
+  },
+  calendarMonth: {
+    ...TYPOGRAPHY.label1,
+    color: COLORS.label.normal,
+    fontWeight: FONT_WEIGHT.semiBold,
+  },
+  weekdayHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: SPACING.pt16,
-    paddingVertical: SPACING.pt12,
+    paddingHorizontal: 2,
   },
-  dateCell: {
+  weekdayHeader: {
     flex: 1,
-    alignItems: 'center',
-    gap: 4,
+    textAlign: 'center',
+    ...TYPOGRAPHY.caption1,
+    color: COLORS.label.assistive,
+    fontWeight: FONT_WEIGHT.medium,
   },
-  dateWeekday: {
+  weekStrip: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
+  },
+  monthGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 2,
+  },
+  gridCell: {
+    width: `${100 / 7}%`,
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  monthNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: SPACING.pt08,
+    paddingHorizontal: 4,
+  },
+  monthNavBtn: { paddingVertical: 4, paddingHorizontal: 6 },
+  monthNavText: {
     ...TYPOGRAPHY.caption1,
     color: COLORS.label.alternative,
     fontWeight: FONT_WEIGHT.medium,
+  },
+  monthNavPrimary: { color: COLORS.primary.normal, fontWeight: FONT_WEIGHT.semiBold },
+  dateCell: {
+    width: 36,
+    alignItems: 'center',
+    gap: 4,
   },
   dateBubble: {
     width: 36,
@@ -356,6 +579,33 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: SPACING.pt12,
     padding: SPACING.pt16,
+    position: 'relative',
+  },
+  deleteBadge: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.status.negative,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    zIndex: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.18,
+    shadowRadius: 3,
+    elevation: 20,
+  },
+  deleteBadgeText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    lineHeight: 22,
+    marginTop: -1,
   },
   cardLeft: { flex: 1, gap: 4 },
   mealTitle: {
