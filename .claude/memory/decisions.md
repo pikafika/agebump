@@ -675,3 +675,52 @@ src/types/food.ts
 src/utils/dateUtils.ts
 src/utils/imageUtils.ts
 작업 요약: feat: 식단 일기 리디자인, AI 가이드 보기/재생성, 게이지 상태 테마- 기록(식단 일기) 페이지 전면 리디자인: 칼로리 강조형 카드 + 영문 주간 캘린더(식사색 도트) + 영양 태그 자동 생성(nutritionTags 유틸) + 그룹 헤더 제거- AI 가이드 기능 수정:  - 식단 일기 상세에서 recordId+ts를 가이드 페이지에 전달, 단건/과거 기록 컨텍스트 처리 (foodStore.persistUpdateRecord, fetchMealTypesForDates 추가)  - generateGuide를 SSE 스트리밍→일반 generateContent 엔드포인트로 전환 (RN fetch ReadableStream 미지원 회피)  - 분석 페이지에 저장된 가이드 미리보기(3장 카드) + "다시 생성" 플로우(regenerate=1)- 분석/계정 페이지 Top Bar를 식단 일기 패턴(← 타이틀 ⋮)으로 통일- 배스킨라빈스체 폰트 name 테이블 패치 — Family Name(nameID 1/2/4/6) 명시로 iOS 시스템 폰트 폴백 해결- 메인 페이지 게이지 모션: SVG sin 곡선 wave 2겹 위·아래 출렁 + 칼로리 카운트업, waveBack 30% 좌측 이동으로 phase 교차- 메인 페이지 상태별 컬러 테마(start/progress/near/over): 진행률 기반 카드/wave/텍스트 색 동시 변경, 상단 헤더·CTA·sparkle 제외- 신규: src/store/userProfileStore.ts, src/utils/{dateUtils,nutritionTags}.ts, assets/fonts/{BRBA_B,BRRA_R}.otf
+
+## [2026-05-13 00:23:25]
+변경 파일: (변경 파일 없음)
+작업 요약: feat: 분석 에러 핸들링·식단 일기 편집·확장 캘린더 + 시간대/메모 보안 보강Gemini API:- GeminiHttpError로 HTTP 에러와 raw fetch 실패 분리, retryDelay 파싱- 429는 자동 재시도 제거(quota 소진 방지), 5xx + fetch 실패만 백오프 재시도- analysis/guide에 describeError() 추가로 인증/사용량/서버오류/네트워크 메시지 분기- generateGuide도 동일 재시도 경로로 통합, 동시 호출 차단(inFlightRef)- imageUtils base64 빈 결과 검증식단 일기:- Top Bar ⋮로 편집 모드 토글, 각 카드 우상단 빨간 × 배지(zIndex 보장)- 캘린더를 ScrollView 내부로 이동해 z-order 자연화- 가로 1주 스트립 → 접기/펼치기 월 그리드(iOS 캘린더 패턴)- dateUtils: weekContaining/datesInMonth/firstWeekdayOffset/addMonthsClamped/formatMonthLabelKO/weekdayInitialEN 추가- foodStore에 persistDeleteRecord 추가 (과거 기록 영구 삭제)AI 가이드 헤더:- 분석/상세와 동일한 row 헤더로 통일, 좌측 × 닫기 버튼, 우측 더보기 hideP0 시간대 키 일원화:- foodStore의 UTC 기반 toDateString/todayString 제거, dateUtils의 로컬 함수로 일원화- migrations.ts: migrateLegacyUtcKeys()로 UTC 키 기록을 timestamp 기준 로컬 키로 재그룹핑- app/_layout에서 부팅 시 비차단 실행P1-2(a) 메모 secure-store 분리:- expo-secure-store 설치(config plugin)- memoStore.ts: iOS Keychain / Android Keystore 암호화 저장, 빈 텍스트 자동 삭제- migrateMemosToSecureStore(): 기존 record.memo 이전 후 record envelope에서 평문 제거- FoodRecord.memo는 @deprecated로 표시(레거시 호환), analysis는 secure-store 비동기 로드/blur 시 저장문서:- docs/security/api-key-restrictions.md: Cloud Console API 키 제한 적용 단계 가이드
+
+## [2026-05-13 20:55:59]
+변경 파일: .claude/memory/decisions.md
+.claude/settings.local.json
+작업 요약: feat: 분석 에러 핸들링·식단 일기 편집·확장 캘린더 + 시간대/메모 보안 보강Gemini API:- GeminiHttpError로 HTTP 에러와 raw fetch 실패 분리, retryDelay 파싱- 429는 자동 재시도 제거(quota 소진 방지), 5xx + fetch 실패만 백오프 재시도- analysis/guide에 describeError() 추가로 인증/사용량/서버오류/네트워크 메시지 분기- generateGuide도 동일 재시도 경로로 통합, 동시 호출 차단(inFlightRef)- imageUtils base64 빈 결과 검증식단 일기:- Top Bar ⋮로 편집 모드 토글, 각 카드 우상단 빨간 × 배지(zIndex 보장)- 캘린더를 ScrollView 내부로 이동해 z-order 자연화- 가로 1주 스트립 → 접기/펼치기 월 그리드(iOS 캘린더 패턴)- dateUtils: weekContaining/datesInMonth/firstWeekdayOffset/addMonthsClamped/formatMonthLabelKO/weekdayInitialEN 추가- foodStore에 persistDeleteRecord 추가 (과거 기록 영구 삭제)AI 가이드 헤더:- 분석/상세와 동일한 row 헤더로 통일, 좌측 × 닫기 버튼, 우측 더보기 hideP0 시간대 키 일원화:- foodStore의 UTC 기반 toDateString/todayString 제거, dateUtils의 로컬 함수로 일원화- migrations.ts: migrateLegacyUtcKeys()로 UTC 키 기록을 timestamp 기준 로컬 키로 재그룹핑- app/_layout에서 부팅 시 비차단 실행P1-2(a) 메모 secure-store 분리:- expo-secure-store 설치(config plugin)- memoStore.ts: iOS Keychain / Android Keystore 암호화 저장, 빈 텍스트 자동 삭제- migrateMemosToSecureStore(): 기존 record.memo 이전 후 record envelope에서 평문 제거- FoodRecord.memo는 @deprecated로 표시(레거시 호환), analysis는 secure-store 비동기 로드/blur 시 저장문서:- docs/security/api-key-restrictions.md: Cloud Console API 키 제한 적용 단계 가이드
+
+## [2026-05-13 21:37:45]
+변경 파일: .claude/memory/decisions.md
+.claude/settings.local.json
+.env.example
+app.json
+app/camera.tsx
+src/api/gemini.ts
+src/utils/imageUtils.ts
+작업 요약: feat: 분석 에러 핸들링·식단 일기 편집·확장 캘린더 + 시간대/메모 보안 보강Gemini API:- GeminiHttpError로 HTTP 에러와 raw fetch 실패 분리, retryDelay 파싱- 429는 자동 재시도 제거(quota 소진 방지), 5xx + fetch 실패만 백오프 재시도- analysis/guide에 describeError() 추가로 인증/사용량/서버오류/네트워크 메시지 분기- generateGuide도 동일 재시도 경로로 통합, 동시 호출 차단(inFlightRef)- imageUtils base64 빈 결과 검증식단 일기:- Top Bar ⋮로 편집 모드 토글, 각 카드 우상단 빨간 × 배지(zIndex 보장)- 캘린더를 ScrollView 내부로 이동해 z-order 자연화- 가로 1주 스트립 → 접기/펼치기 월 그리드(iOS 캘린더 패턴)- dateUtils: weekContaining/datesInMonth/firstWeekdayOffset/addMonthsClamped/formatMonthLabelKO/weekdayInitialEN 추가- foodStore에 persistDeleteRecord 추가 (과거 기록 영구 삭제)AI 가이드 헤더:- 분석/상세와 동일한 row 헤더로 통일, 좌측 × 닫기 버튼, 우측 더보기 hideP0 시간대 키 일원화:- foodStore의 UTC 기반 toDateString/todayString 제거, dateUtils의 로컬 함수로 일원화- migrations.ts: migrateLegacyUtcKeys()로 UTC 키 기록을 timestamp 기준 로컬 키로 재그룹핑- app/_layout에서 부팅 시 비차단 실행P1-2(a) 메모 secure-store 분리:- expo-secure-store 설치(config plugin)- memoStore.ts: iOS Keychain / Android Keystore 암호화 저장, 빈 텍스트 자동 삭제- migrateMemosToSecureStore(): 기존 record.memo 이전 후 record envelope에서 평문 제거- FoodRecord.memo는 @deprecated로 표시(레거시 호환), analysis는 secure-store 비동기 로드/blur 시 저장문서:- docs/security/api-key-restrictions.md: Cloud Console API 키 제한 적용 단계 가이드
+
+## [2026-05-13 21:46:03]
+변경 파일: .claude/memory/decisions.md
+.claude/settings.local.json
+.env.example
+app.json
+app/camera.tsx
+src/api/gemini.ts
+src/utils/imageUtils.ts
+작업 요약: feat: 분석 에러 핸들링·식단 일기 편집·확장 캘린더 + 시간대/메모 보안 보강Gemini API:- GeminiHttpError로 HTTP 에러와 raw fetch 실패 분리, retryDelay 파싱- 429는 자동 재시도 제거(quota 소진 방지), 5xx + fetch 실패만 백오프 재시도- analysis/guide에 describeError() 추가로 인증/사용량/서버오류/네트워크 메시지 분기- generateGuide도 동일 재시도 경로로 통합, 동시 호출 차단(inFlightRef)- imageUtils base64 빈 결과 검증식단 일기:- Top Bar ⋮로 편집 모드 토글, 각 카드 우상단 빨간 × 배지(zIndex 보장)- 캘린더를 ScrollView 내부로 이동해 z-order 자연화- 가로 1주 스트립 → 접기/펼치기 월 그리드(iOS 캘린더 패턴)- dateUtils: weekContaining/datesInMonth/firstWeekdayOffset/addMonthsClamped/formatMonthLabelKO/weekdayInitialEN 추가- foodStore에 persistDeleteRecord 추가 (과거 기록 영구 삭제)AI 가이드 헤더:- 분석/상세와 동일한 row 헤더로 통일, 좌측 × 닫기 버튼, 우측 더보기 hideP0 시간대 키 일원화:- foodStore의 UTC 기반 toDateString/todayString 제거, dateUtils의 로컬 함수로 일원화- migrations.ts: migrateLegacyUtcKeys()로 UTC 키 기록을 timestamp 기준 로컬 키로 재그룹핑- app/_layout에서 부팅 시 비차단 실행P1-2(a) 메모 secure-store 분리:- expo-secure-store 설치(config plugin)- memoStore.ts: iOS Keychain / Android Keystore 암호화 저장, 빈 텍스트 자동 삭제- migrateMemosToSecureStore(): 기존 record.memo 이전 후 record envelope에서 평문 제거- FoodRecord.memo는 @deprecated로 표시(레거시 호환), analysis는 secure-store 비동기 로드/blur 시 저장문서:- docs/security/api-key-restrictions.md: Cloud Console API 키 제한 적용 단계 가이드
+
+## [2026-05-13 21:51:17]
+변경 파일: .claude/memory/decisions.md
+.claude/settings.local.json
+.env.example
+app.json
+app/camera.tsx
+src/api/gemini.ts
+src/utils/imageUtils.ts
+작업 요약: feat: 분석 에러 핸들링·식단 일기 편집·확장 캘린더 + 시간대/메모 보안 보강Gemini API:- GeminiHttpError로 HTTP 에러와 raw fetch 실패 분리, retryDelay 파싱- 429는 자동 재시도 제거(quota 소진 방지), 5xx + fetch 실패만 백오프 재시도- analysis/guide에 describeError() 추가로 인증/사용량/서버오류/네트워크 메시지 분기- generateGuide도 동일 재시도 경로로 통합, 동시 호출 차단(inFlightRef)- imageUtils base64 빈 결과 검증식단 일기:- Top Bar ⋮로 편집 모드 토글, 각 카드 우상단 빨간 × 배지(zIndex 보장)- 캘린더를 ScrollView 내부로 이동해 z-order 자연화- 가로 1주 스트립 → 접기/펼치기 월 그리드(iOS 캘린더 패턴)- dateUtils: weekContaining/datesInMonth/firstWeekdayOffset/addMonthsClamped/formatMonthLabelKO/weekdayInitialEN 추가- foodStore에 persistDeleteRecord 추가 (과거 기록 영구 삭제)AI 가이드 헤더:- 분석/상세와 동일한 row 헤더로 통일, 좌측 × 닫기 버튼, 우측 더보기 hideP0 시간대 키 일원화:- foodStore의 UTC 기반 toDateString/todayString 제거, dateUtils의 로컬 함수로 일원화- migrations.ts: migrateLegacyUtcKeys()로 UTC 키 기록을 timestamp 기준 로컬 키로 재그룹핑- app/_layout에서 부팅 시 비차단 실행P1-2(a) 메모 secure-store 분리:- expo-secure-store 설치(config plugin)- memoStore.ts: iOS Keychain / Android Keystore 암호화 저장, 빈 텍스트 자동 삭제- migrateMemosToSecureStore(): 기존 record.memo 이전 후 record envelope에서 평문 제거- FoodRecord.memo는 @deprecated로 표시(레거시 호환), analysis는 secure-store 비동기 로드/blur 시 저장문서:- docs/security/api-key-restrictions.md: Cloud Console API 키 제한 적용 단계 가이드
+
+## [2026-05-13 21:52:24]
+변경 파일: .claude/memory/decisions.md
+.claude/settings.local.json
+작업 요약: feat: Vercel 웹 배포 — API 프록시·플랫폼 분기·카메라 web 지원- api/gemini-proxy.ts: Edge Function으로 GEMINI_API_KEY 서버 보관- vercel.json: Expo static export 빌드 설정 + SPA rewrite- app.json: web output static 추가- src/api/gemini.ts: 웹에서 /api/gemini-proxy 경유, 키 클라이언트 미노출- src/utils/imageUtils.ts: expo-file-system/legacy + FileReader 분기- app/camera.tsx: 웹에서 launchCameraAsync 사용, CameraView 비노출
+
+## [2026-05-13 22:06:41]
+변경 파일: .claude/memory/decisions.md
+.claude/settings.local.json
+작업 요약: fix: 프록시 Origin 체크로 외부 quota 남용 방어
