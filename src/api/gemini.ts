@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 import { type AIGuide, type FoodAnalysisResult, type FoodRecord, type GlycemicLevel } from '../types/food';
 
 const GEMINI_API_URL =
@@ -180,12 +182,18 @@ async function callGeminiApiOnce(
   parts: GeminiPart[],
   generationConfig: Record<string, unknown>,
 ): Promise<string> {
-  const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-  if (!apiKey || apiKey.startsWith('your_')) throw new GeminiApiKeyError();
+  let url: string;
+  if (Platform.OS === 'web') {
+    url = '/api/gemini-proxy';
+  } else {
+    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey || apiKey.startsWith('your_')) throw new GeminiApiKeyError();
+    url = `${GEMINI_API_URL}?key=${apiKey}`;
+  }
 
   let response: Response;
   try {
-    response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

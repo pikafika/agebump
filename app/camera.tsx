@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -45,10 +46,10 @@ export function CameraScreen() {
     router.replace(`/analysis?imageUri=${encodeURIComponent(resizedUri)}`);
   }
 
-  if (!permission) return <View style={styles.container} />;
+  if (Platform.OS !== 'web' && !permission) return <View style={styles.container} />;
 
   // ── 권한 화면 ────────────────────────────────────────────────────────────────
-  if (!permission.granted) {
+  if (Platform.OS !== 'web' && !permission?.granted) {
     return (
       <View style={styles.container}>
         {/* 닫기 — 터치 영역이 노치 아래에 오도록 insets.top 적용 */}
@@ -77,6 +78,19 @@ export function CameraScreen() {
   // ── 이벤트 핸들러 ─────────────────────────────────────────────────────────────
   async function handleCapture() {
     if (isLoading) return;
+    if (Platform.OS === 'web') {
+      setLoading(true);
+      try {
+        const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.9 });
+        if (result.canceled || !result.assets[0]) return;
+        await navigateToAnalysis(result.assets[0].uri);
+      } catch (err) {
+        Alert.alert('오류', err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
     setLoading(true);
     try {
       const photo = await cameraRef.current?.takePictureAsync({ quality: 0.9 });
@@ -120,7 +134,7 @@ export function CameraScreen() {
   return (
     <View style={styles.container}>
       {/* 카메라 / 텍스트 배경 — 전체 화면 */}
-      {mode !== '직접입력' ? (
+      {mode !== '직접입력' && Platform.OS !== 'web' ? (
         <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.textBg]} />
