@@ -724,3 +724,107 @@ src/utils/imageUtils.ts
 변경 파일: .claude/memory/decisions.md
 .claude/settings.local.json
 작업 요약: fix: 프록시 Origin 체크로 외부 quota 남용 방어
+
+## [2026-05-13 22:15:16]
+변경 파일: (변경 파일 없음)
+작업 요약: chore: .claude/tmp/ gitignore 추가임시 QR 코드 등 세션성 파일이 추적되지 않도록 제외
+
+## [2026-05-13 22:20:01]
+변경 파일: .claude/memory/decisions.md
+작업 요약: chore: .claude/tmp/ gitignore 추가임시 QR 코드 등 세션성 파일이 추적되지 않도록 제외
+
+## [2026-05-13 22:33:08]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/index.tsx
+작업 요약: chore: .claude/tmp/ gitignore 추가임시 QR 코드 등 세션성 파일이 추적되지 않도록 제외
+
+## [2026-05-13 22:34:29]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/index.tsx
+작업 요약: chore: .claude/tmp/ gitignore 추가임시 QR 코드 등 세션성 파일이 추적되지 않도록 제외
+
+## [2026-05-13 22:48:24]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: chore: .claude/tmp/ gitignore 추가임시 QR 코드 등 세션성 파일이 추적되지 않도록 제외
+
+## [2026-05-13 23:25:37]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+app/analysis.tsx
+app/camera.tsx
+작업 요약: chore: .claude/tmp/ gitignore 추가임시 QR 코드 등 세션성 파일이 추적되지 않도록 제외
+
+## [2026-05-13 23:28:45]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행
+
+## [2026-05-13 23:40:47]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행
+
+## [2026-05-13 23:45:20]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행
+
+## [2026-05-13 23:51:38]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행
+
+## [2026-05-13 23:55:21]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행
+
+## [2026-05-13 23:58:05]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행
+
+## [2026-05-14 00:00:25]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행
+
+## [2026-05-14 00:04:03]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행
+
+## [2026-05-14 08:37:57]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행
+
+## [2026-05-14 08:45:52]
+변경 파일: .claude/memory/MEMORY.md
+.claude/memory/decisions.md
+.claude/memory/project_session_20260513.md
+app/(tabs)/index.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행

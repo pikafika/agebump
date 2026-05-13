@@ -1,6 +1,6 @@
 ---
 name: project-session-20260513
-description: 2026-05-13 — 카메라 분석 연결 실패 디버깅, 식단 일기 수정 모드/확장 캘린더, AI 가이드 헤더 통일, 로컬 저장/보안 P0+P1-2 수정
+description: 2026-05-13 — 카메라 분석 연결 실패 디버깅, 식단 일기 수정 모드/확장 캘린더, AI 가이드 헤더 통일, 로컬 저장/보안 P0+P1-2 수정, Vercel 웹 배포 완료, 웨이브 반응형 수정
 metadata:
   type: project
 ---
@@ -59,6 +59,32 @@ metadata:
 
 ### 8. 부수 — UX 워크플로 메모리 (`.claude/memory/feedback_app_run_workflow.md`)
 - 앞으로 "앱 실행해 줘" 요청 시 항상 **QR PNG 이미지 생성 + 로컬 웹 접속 URL 두 가지**를 함께 제공하기로 합의 (터미널 ANSI QR이 잘려서 스캔 안 되던 이슈)
+
+### 9. Vercel 웹 배포 (`api/gemini-proxy.ts`, `vercel.json`, `src/utils/imageUtils.ts`, `src/api/gemini.ts`, `app/camera.tsx`, `.env.example`)
+
+- `api/gemini-proxy.ts` 신설 — Vercel Edge Function으로 Gemini API 프록시. `GEMINI_API_KEY`는 서버 전용 env var로만 보관, 클라이언트 번들에 포함되지 않음
+- `vercel.json`: `npx expo export --platform web` 빌드, `dist` 출력, SPA 리라이트(`/((?!api/).*) → /index.html`)
+- `ALLOWED_ORIGIN` env var로 origin 검증 → 외부 도메인 quota 어뷰징 차단
+- `src/api/gemini.ts`: `Platform.OS === 'web'`이면 `/api/gemini-proxy` 호출, 네이티브는 기존 `EXPO_PUBLIC_GEMINI_API_KEY` 직접 호출 (Metro dead-code elimination으로 웹 번들엔 키 미포함)
+- `src/utils/imageUtils.ts`: `expo-file-system/legacy` (`readAsStringAsync`, `getInfoAsync`) 네이티브 전용, 웹은 `FileReader` Web API로 분기
+- `app/camera.tsx`: `Platform.OS !== 'web'` 가드로 CameraView 숨김. 웹 카메라는 `launchCameraAsync` 사용
+- `app.json`: `"output": "static"` 추가
+- `.env.example`: 네이티브 전용 `EXPO_PUBLIC_*` vs 서버 전용 `GEMINI_API_KEY` 주석 섹션 분리
+- GitHub 원격 설정 완료: `https://github.com/pikafika/agebump.git`
+- `README.md` 신규 작성 (한국어, 기능표/기술 스택/프로젝트 구조/Vercel 배포 가이드/보안 구조도 포함)
+- 배포 워크플로 규칙 메모리 저장: 로컬 확인 → 커밋 승인 → 푸시 승인 → 라이브 배포 승인 (각 단계 별도 확인 필수)
+
+### 10. 메인 페이지 웨이브 반응형 수정 (`app/(tabs)/index.tsx`)
+
+- **문제:** `WAVE_WIDTH = 820` 하드코딩 → 브라우저 창이 넓어지면 게이지 카드 우측에 배경색 영역 노출
+- **수정:** `useWindowDimensions().width`로 실시간 화면 너비 감지
+  - `cardWidth = screenWidth - SPACING.pt20 * 2`
+  - `waveWidth = ceil((cardWidth + WAVE_FRONT_LEFT) / (1 - WAVE_BACK_RATIO)) + 20` — waveBack 30% 좌측 이동 감안 공식
+  - `waveBackLeft = -(WAVE_FRONT_LEFT + waveWidth * WAVE_BACK_RATIO)` — 동적 left 오프셋
+  - `waveCycles = max(5, ceil(waveWidth / BASE_CYCLE_WIDTH))` — 화면 너비 비례 사이클 자동 증가 (밀도 일정)
+- SVG path 문자열을 `useMemo`로 메모이제이션 → 리사이즈 시에만 재계산, 애니메이션 매 프레임 재계산 없음
+- `WaveSvg` props에 `waveWidth`, `pathFull`, `pathBand` 추가. 파일 내 정적 `WAVE_WIDTH`, `WAVE_BACK_OFFSET`, `WAVE_PATH_FULL`, `WAVE_PATH_BAND` 상수 완전 제거
+- TypeScript 에러 0 / Expo 웹 빌드 정상 확인
 
 ## 보류된 항목 (사용자 결정으로 이번 세션 제외)
 - P1-1(a) 콘솔 작업: 가이드 문서대로 사용자가 직접 적용 예정

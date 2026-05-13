@@ -6,8 +6,8 @@ import {
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import {
@@ -30,42 +30,43 @@ const CARD_RADIUS = 32;
 const CTA_RADIUS = 29; // 32 → 29 (≈10% reduction)
 
 // ── Sine wave SVG ──
-const WAVE_WIDTH = 820; // 좌측 30% 이동해도 우측이 카드 가로를 가득 채우도록 키움
-const WAVE_HEIGHT = 48; // sin 표면이 차지하는 상단 영역 높이
-const WAVE_FILL_DEPTH = 800; // 표면 아래로 채울 길이 (충분히 크게 → 카드 overflow로 잘림)
+const WAVE_HEIGHT = 48;
+const WAVE_FILL_DEPTH = 800;
 const WAVE_AMP = 18;
-const WAVE_CYCLES = 5; // WAVE_WIDTH 증가에 맞춰 사이클도 +1 → cycle 폭 유지(164px)
-const WAVE_BACK_OFFSET = -Math.round(WAVE_WIDTH * 0.3); // waveBack 추가 좌측 이동 (약 -246px)
+const WAVE_FRONT_LEFT = 80;   // waveFront는 카드 좌측에서 이만큼 더 왼쪽에서 시작
+const WAVE_BACK_RATIO = 0.3;  // waveBack은 waveWidth의 30% 추가 좌측 이동
+const BASE_CYCLE_WIDTH = 164; // 기준 사이클 폭(px) — 화면이 넓어져도 밀도 유지
 
-// sin 표면(상단 WAVE_HEIGHT) + 그 아래 totalHeight까지 단색 채움
-function buildWavePath(totalHeight: number): string {
+// waveWidth·cycles를 런타임에 받아 경로 생성
+function buildWavePath(totalHeight: number, waveWidth: number, cycles: number): string {
   const mid = WAVE_HEIGHT / 2;
-  const cycle = WAVE_WIDTH / WAVE_CYCLES;
+  const cycle = waveWidth / cycles;
   const cp = cycle / 4;
   let d = `M 0 ${mid}`;
-  for (let i = 0; i < WAVE_CYCLES; i++) {
+  for (let i = 0; i < cycles; i++) {
     const x0 = i * cycle;
     const x1 = x0 + cycle / 2;
     const x2 = x0 + cycle;
     d += ` C ${x0 + cp} ${mid - WAVE_AMP}, ${x1 - cp} ${mid - WAVE_AMP}, ${x1} ${mid}`;
     d += ` C ${x1 + cp} ${mid + WAVE_AMP}, ${x2 - cp} ${mid + WAVE_AMP}, ${x2} ${mid}`;
   }
-  d += ` L ${WAVE_WIDTH} ${totalHeight} L 0 ${totalHeight} Z`;
+  d += ` L ${waveWidth} ${totalHeight} L 0 ${totalHeight} Z`;
   return d;
 }
-const WAVE_PATH_FULL = buildWavePath(WAVE_FILL_DEPTH);
-const WAVE_PATH_BAND = buildWavePath(WAVE_HEIGHT);
 
 interface WaveSvgProps {
   fill: string;
   stroke?: string;
-  full?: boolean; // true면 표면 아래로 풀 채움 / false면 표면 띠만
+  full?: boolean;
+  waveWidth: number;
+  pathFull: string;
+  pathBand: string;
 }
-function WaveSvg({ fill, stroke, full = false }: WaveSvgProps) {
+function WaveSvg({ fill, stroke, full = false, waveWidth, pathFull, pathBand }: WaveSvgProps) {
   const h = full ? WAVE_FILL_DEPTH : WAVE_HEIGHT;
-  const d = full ? WAVE_PATH_FULL : WAVE_PATH_BAND;
+  const d = full ? pathFull : pathBand;
   return (
-    <Svg width={WAVE_WIDTH} height={h} pointerEvents="none">
+    <Svg width={waveWidth} height={h} pointerEvents="none">
       <Path
         d={d}
         fill={fill}
@@ -189,6 +190,22 @@ interface GaugeCardProps {
 }
 
 function GaugeCard({ ratio, percent, theme }: GaugeCardProps) {
+  const { width: screenWidth } = useWindowDimensions();
+  // 카드 가로 = 화면 가로 - 양쪽 마진(SPACING.pt20 × 2)
+  const cardWidth = screenWidth - SPACING.pt20 * 2;
+  // waveBack이 30% 좌측 이동해도 우측 끝까지 채우려면 이 공식이 필요
+  const waveWidth = Math.ceil((cardWidth + WAVE_FRONT_LEFT) / (1 - WAVE_BACK_RATIO)) + 20;
+  const waveBackLeft = -(WAVE_FRONT_LEFT + Math.round(waveWidth * WAVE_BACK_RATIO));
+  const waveCycles = Math.max(5, Math.ceil(waveWidth / BASE_CYCLE_WIDTH));
+  const pathFull = useMemo(
+    () => buildWavePath(WAVE_FILL_DEPTH, waveWidth, waveCycles),
+    [waveWidth, waveCycles],
+  );
+  const pathBand = useMemo(
+    () => buildWavePath(WAVE_HEIGHT, waveWidth, waveCycles),
+    [waveWidth, waveCycles],
+  );
+
   const progress = useRef(new Animated.Value(0)).current;
   const wave1 = useRef(new Animated.Value(0)).current;
   const wave2 = useRef(new Animated.Value(0)).current;
@@ -281,19 +298,19 @@ function GaugeCard({ ratio, percent, theme }: GaugeCardProps) {
             style={[
               styles.wave,
               styles.waveBack,
-              { transform: [{ translateY: wave2Y }] },
+              { width: waveWidth, left: waveBackLeft, transform: [{ translateY: wave2Y }] },
             ]}
           >
-            <WaveSvg fill={theme.waveBackFill} full />
+            <WaveSvg fill={theme.waveBackFill} full waveWidth={waveWidth} pathFull={pathFull} pathBand={pathBand} />
           </Animated.View>
           <Animated.View
             style={[
               styles.wave,
               styles.waveFront,
-              { transform: [{ translateY: wave1Y }] },
+              { width: waveWidth, left: -WAVE_FRONT_LEFT, transform: [{ translateY: wave1Y }] },
             ]}
           >
-            <WaveSvg fill={theme.waveFrontFill} stroke={theme.waveFrontStroke} full />
+            <WaveSvg fill={theme.waveFrontFill} stroke={theme.waveFrontStroke} full waveWidth={waveWidth} pathFull={pathFull} pathBand={pathBand} />
           </Animated.View>
         </Animated.View>
       </View>
@@ -332,6 +349,7 @@ function GaugeCard({ ratio, percent, theme }: GaugeCardProps) {
 }
 
 export function HomeScreen() {
+  const { width: screenWidth } = useWindowDimensions();
   const { getTodayTotalCalories } = useFoodStore();
   const dailyCalorieGoal = useUserProfileStore((s) => s.dailyCalorieGoal);
   const totalCalories = getTodayTotalCalories();
@@ -339,6 +357,12 @@ export function HomeScreen() {
   const ratio = dailyCalorieGoal > 0 ? totalCalories / dailyCalorieGoal : 0;
   const percent = Math.min(Math.round(ratio * 100), 999);
   const theme = THEME_BY_STATE[getCalorieState(ratio)];
+
+  // 최종 수치 기준으로 폰트 크기 결정 → 애니메이션 중에도 레이아웃 안정
+  // 가용 폭 = 화면 - hero 좌우 마진(pt20×2) - heroContent 패딩(left pt32 + right pt56) - kcal 텍스트+갭 추정치
+  const numberAreaWidth = screenWidth - SPACING.pt20 * 2 - SPACING.pt32 - SPACING.pt56 - 70;
+  const calStr = totalCalories.toLocaleString('ko-KR');
+  const calorieFs = Math.min(128, Math.max(36, Math.floor(numberAreaWidth / (calStr.length * 0.55))));
 
   // 칼로리 카운트업: 0 → totalCalories (게이지 차오름과 싱크)
   const calAnim = useRef(new Animated.Value(0)).current;
@@ -388,9 +412,8 @@ export function HomeScreen() {
 
           <View style={styles.calorieBlock}>
             <Text
-              style={[styles.calorieNumber, { color: theme.text }]}
+              style={[styles.calorieNumber, { color: theme.text, fontSize: calorieFs, lineHeight: calorieFs + 4 }]}
               numberOfLines={1}
-              adjustsFontSizeToFit
             >
               {displayCal.toLocaleString('ko-KR')}
             </Text>
@@ -399,14 +422,24 @@ export function HomeScreen() {
 
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
-              <Text style={[styles.metaValue, { color: theme.text }]}>
+              <Text
+                style={[styles.metaValue, { color: theme.text }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
                 {dailyCalorieGoal.toLocaleString('ko-KR')}
               </Text>
               <Text style={[styles.metaLabel, { color: theme.textSoft }]}>목표</Text>
             </View>
             <View style={styles.metaDivider} />
             <View style={styles.metaItem}>
-              <Text style={[styles.metaValue, { color: theme.text }]}>
+              <Text
+                style={[styles.metaValue, { color: theme.text }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+              >
                 {remaining.toLocaleString('ko-KR')}
               </Text>
               <Text style={[styles.metaLabel, { color: theme.textSoft }]}>남은 칼로리</Text>
@@ -515,16 +548,16 @@ const styles = StyleSheet.create({
   },
   wave: {
     position: 'absolute',
-    width: WAVE_WIDTH,
-    height: WAVE_FILL_DEPTH, // sin 표면 + 그 아래 채움까지 한 컨테이너
+    height: WAVE_FILL_DEPTH,
+    // width·left는 GaugeCard에서 인라인으로 동적 적용
   },
   waveBack: {
     top: -WAVE_HEIGHT / 2 - 4,
-    left: -80 + WAVE_BACK_OFFSET, // 30% 좌측 이동 → waveFront와 phase 어긋남
+    // left는 GaugeCard에서 인라인으로 동적 적용
   },
   waveFront: {
     top: -WAVE_HEIGHT / 2 - 12,
-    left: -80,
+    // left는 GaugeCard에서 인라인으로 동적 적용
   },
   blob: {
     position: 'absolute',
@@ -653,13 +686,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: SPACING.pt08,
     marginBottom: SPACING.pt28,
+    width: '100%',
   },
   calorieNumber: {
     fontFamily: FONT_FAMILY.brand,
-    fontSize: 128,
-    lineHeight: 132,
-    color: '#0F3F1A',
     letterSpacing: -3,
+    flexShrink: 1,
   },
   calorieUnit: {
     fontFamily: FONT_FAMILY.brand,
