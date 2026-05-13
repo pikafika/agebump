@@ -8,6 +8,14 @@ export default async function handler(req: Request): Promise<Response> {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
 
+  const allowedOrigin = process.env.ALLOWED_ORIGIN;
+  if (allowedOrigin) {
+    const origin = req.headers.get('origin') ?? '';
+    if (!origin.startsWith(allowedOrigin)) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return Response.json(
