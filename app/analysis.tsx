@@ -32,6 +32,7 @@ import {
 import { useFoodStore } from '../src/store/foodStore';
 import { getMemo, setMemo as persistMemo } from '../src/store/memoStore';
 import { type FoodAnalysisResult, type FoodItem, type FoodRecord, type MealType } from '../src/types/food';
+import { getPendingImageUri, clearPendingImageUri } from '../src/store/pendingImageStore';
 import { imageToBase64 } from '../src/utils/imageUtils';
 
 function detectMealType(): MealType {
@@ -200,6 +201,14 @@ export function AnalysisScreen() {
   const [mealType, setMealType] = useState<MealType>(detectMealType);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [pendingUri] = useState<string | null>(() => {
+    if (Platform.OS === 'web' && !imageUri && !foodName && !recordId) {
+      const uri = getPendingImageUri();
+      clearPendingImageUri();
+      return uri;
+    }
+    return null;
+  });
 
   async function runAnalysis() {
     setIsLoading(true);
@@ -229,6 +238,9 @@ export function AnalysisScreen() {
         setMealType(saved.mealType);
       } else if (imageUri) {
         const base64 = await imageToBase64(decodeURIComponent(imageUri));
+        res = await analyzeFood(base64);
+      } else if (pendingUri) {
+        const base64 = await imageToBase64(pendingUri);
         res = await analyzeFood(base64);
       } else if (foodName) {
         res = await analyzeFoodText(decodeURIComponent(foodName));
@@ -294,7 +306,7 @@ export function AnalysisScreen() {
       timestamp: Date.now(),
       mealType,
       foods: result.foods,
-      imageUri: imageUri ? decodeURIComponent(imageUri) : undefined,
+      imageUri: imageUri ? decodeURIComponent(imageUri) : (pendingUri ?? undefined),
     };
     addRecord(record);
     // 메모는 별도 secure-store에 저장 (record envelope에는 평문으로 남기지 않음)
@@ -313,9 +325,9 @@ export function AnalysisScreen() {
   }
 
   const savedRecord = recordId ? getRecordById(recordId) : undefined;
-  const decodedUri = imageUri
-    ? decodeURIComponent(imageUri)
-    : (savedRecord?.imageUri ?? null);
+  const decodedUri = pendingUri
+    ?? (imageUri ? decodeURIComponent(imageUri) : null)
+    ?? (savedRecord?.imageUri ?? null);
   const allFoods: FoodItem[] = result?.foods ?? [];
   const totalCarbs   = allFoods.reduce((s, f) => s + f.carbs, 0);
   const totalProtein = allFoods.reduce((s, f) => s + f.protein, 0);

@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -17,6 +18,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MontageButton } from '../src/components/montage/MontageButton';
 import { COLORS, FONT_WEIGHT, RADIUS, SPACING, SQUIRCLE, TYPOGRAPHY } from '../src/constants/theme';
+import { setPendingImageUri } from '../src/store/pendingImageStore';
 import { resizeImage, validateImageSize } from '../src/utils/imageUtils';
 
 type InputMode = '촬영' | '성분표' | '직접입력';
@@ -43,13 +45,17 @@ export function CameraScreen() {
       return;
     }
     const resizedUri = await resizeImage(uri);
-    router.replace(`/analysis?imageUri=${encodeURIComponent(resizedUri)}`);
+    if (Platform.OS === 'web') {
+      setPendingImageUri(resizedUri);
+      router.replace('/analysis');
+    } else {
+      router.replace(`/analysis?imageUri=${encodeURIComponent(resizedUri)}`);
+    }
   }
-
-  if (Platform.OS !== 'web' && !permission) return <View style={styles.container} />;
 
   // ── 권한 화면 ────────────────────────────────────────────────────────────────
   if (Platform.OS !== 'web' && !permission?.granted) {
+    const canAsk = !permission || permission.canAskAgain;
     return (
       <View style={styles.container}>
         {/* 닫기 — 터치 영역이 노치 아래에 오도록 insets.top 적용 */}
@@ -68,8 +74,14 @@ export function CameraScreen() {
           <Text style={styles.permissionTitle}>카메라 권한이 필요해요</Text>
           <Text style={styles.permissionBody}>
             음식을 촬영해서 혈당 영향을 분석하려면{'\n'}카메라 접근 권한이 필요합니다.
+            {!canAsk && '\n설정 앱에서 카메라 접근을 허용해주세요.'}
           </Text>
-          <MontageButton label="권한 허용하기" onPress={requestPermission} size="large" fullWidth />
+          <MontageButton
+            label={canAsk ? '권한 허용하기' : '설정에서 허용하기'}
+            onPress={canAsk ? requestPermission : () => void Linking.openSettings()}
+            size="large"
+            fullWidth
+          />
         </View>
       </View>
     );
