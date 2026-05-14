@@ -1,6 +1,15 @@
 /** 혈당 지수(GI) 수준 */
 export type GlycemicLevel = 'low' | 'moderate' | 'high' | 'veryHigh';
 
+/** 음식 유형 카테고리 (혈당 친화도 조합 보너스 계산용) */
+export type FoodTypeCategory = 'vegetable' | 'protein' | 'carb' | 'fermented';
+
+/** 혈당 친화도 점수 라벨 */
+export interface ScoreLabel {
+  label: string;
+  color: string;
+}
+
 /** 식사 유형 */
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
@@ -40,6 +49,12 @@ export interface FoodAnalysisResult {
   overallGiLevel: GlycemicLevel;
   /** 법적 면책 고지 문구 */
   disclaimer: string;
+  /** 식이섬유 합계 (g) */
+  fiber_g?: number;
+  /** 음식 유형 카테고리 목록 */
+  food_types?: FoodTypeCategory[];
+  /** 혈당 친화도 한 줄 코멘트 */
+  comment?: string;
   /** API 호출 또는 파싱 실패 시 에러 메시지 */
   error?: string;
 }
@@ -66,6 +81,20 @@ export interface FoodRecord {
   foods: FoodItem[];
   /** 촬영한 음식 이미지의 로컬 URI */
   imageUri?: string;
+  /** 전체 GI 평균 (0–100) */
+  gi_index?: number;
+  /** 전체 탄수화물 합계 (g) */
+  carbs_g?: number;
+  /** 전체 식이섬유 합계 (g) */
+  fiber_g?: number;
+  /** 음식 유형 카테고리 목록 */
+  food_types?: FoodTypeCategory[];
+  /** 혈당 친화도 점수 (0–100) */
+  score?: number;
+  /** 혈당 친화도 점수 라벨 */
+  scoreLabel?: ScoreLabel;
+  /** 혈당 친화도 한 줄 코멘트 */
+  comment?: string;
   /** AI 가이드 결과 */
   aiGuide?: AIGuide;
   /**

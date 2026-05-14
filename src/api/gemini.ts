@@ -106,6 +106,9 @@ const FOOD_ANALYSIS_PROMPT = `당신은 한국 음식과 가공식품(특히 라
   }],
   "totalCalories": number,
   "overallGiLevel": "low" | "moderate" | "high" | "veryHigh",
+  "fiber_g": number (전체 식이섬유 합계, g),
+  "food_types": ["vegetable" | "protein" | "carb" | "fermented"] (이 식사의 음식 유형 카테고리, 중복 없이),
+  "comment": "string (혈당 친화도 한 줄 코멘트, 20자 이내, 예: '단백질+채소 조합으로 혈당 안정!', '탄수화물 위주라 혈당 주의')",
   "disclaimer": "이 정보는 AI 추정값으로 참고용입니다."
 }
 

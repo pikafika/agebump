@@ -22,6 +22,7 @@ import {
 } from '../../src/constants/theme';
 import { useFoodStore } from '../../src/store/foodStore';
 import { useUserProfileStore } from '../../src/store/userProfileStore';
+import { BloodSugarScoreBlock } from '../../src/components/BloodSugarScoreBlock';
 
 const APP_NAME = '노화방지턱';
 const TICKS_COUNT = 11;
@@ -419,6 +420,8 @@ export function HomeScreen() {
             </Text>
             <Text style={[styles.calorieUnit, { color: theme.textSoft }]}>kcal</Text>
           </View>
+
+          <BloodSugarScoreBlock />
 
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>

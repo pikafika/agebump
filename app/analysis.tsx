@@ -31,9 +31,10 @@ import {
 } from '../src/constants/theme';
 import { useFoodStore } from '../src/store/foodStore';
 import { getMemo, setMemo as persistMemo } from '../src/store/memoStore';
-import { type FoodAnalysisResult, type FoodItem, type FoodRecord, type MealType } from '../src/types/food';
+import { type FoodAnalysisResult, type FoodItem, type FoodRecord, type FoodTypeCategory, type MealType } from '../src/types/food';
 import { clearPendingBase64, clearPendingImageUri, getPendingBase64, getPendingImageUri } from '../src/store/pendingImageStore';
 import { imageToBase64 } from '../src/utils/imageUtils';
+import { calculateScore, getScoreLabel } from '../src/utils/scoreCalculator';
 
 function detectMealType(): MealType {
   const hour = new Date().getHours();
@@ -307,12 +308,30 @@ export function AnalysisScreen() {
   async function handleSave() {
     if (!result) return;
     const newId = Date.now().toString();
+
+    const avgGi =
+      result.foods.length > 0
+        ? result.foods.reduce((s, f) => s + f.gi, 0) / result.foods.length
+        : 55;
+    const sumCarbs = result.foods.reduce((s, f) => s + f.carbs, 0);
+    const fiber = result.fiber_g ?? 0;
+    const foodTypes = (result.food_types ?? []) as FoodTypeCategory[];
+    const score = calculateScore({ gi: avgGi, carbs: sumCarbs, fiber, foods: foodTypes });
+    const scoreLabel = getScoreLabel(score);
+
     const record: FoodRecord = {
       id: newId,
       timestamp: Date.now(),
       mealType,
       foods: result.foods,
       imageUri: imageUri ? decodeURIComponent(imageUri) : undefined,
+      gi_index: Math.round(avgGi),
+      carbs_g: sumCarbs,
+      fiber_g: fiber,
+      food_types: foodTypes,
+      score,
+      scoreLabel,
+      comment: result.comment,
     };
     addRecord(record);
     // 메모는 별도 secure-store에 저장 (record envelope에는 평문으로 남기지 않음)
