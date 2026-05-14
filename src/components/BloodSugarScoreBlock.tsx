@@ -27,6 +27,42 @@ function getMealSlot(record: FoodRecord): MealSlot | null {
   return null;
 }
 
+function getNextMealSuggestion(recordedSlots: MealSlot[], avgScore: number | null): string {
+  const nextSlot = MEAL_SLOTS.find((s) => !recordedSlots.includes(s));
+
+  if (!nextSlot) {
+    if (avgScore === null) return '내일도 건강하게 드세요!';
+    if (avgScore >= 80) return '오늘 하루 완벽했어요!';
+    if (avgScore >= 60) return '내일은 채소를 더 챙겨요';
+    return '내일은 저GI 식단 도전해요';
+  }
+
+  if (avgScore === null) {
+    const defaults: Record<MealSlot, string> = {
+      breakfast: '아침은 달걀+채소로 시작해요',
+      lunch: '점심엔 단백질 꼭 챙겨요',
+      dinner: '저녁은 채소 위주로 드세요',
+    };
+    return defaults[nextSlot];
+  }
+
+  if (nextSlot === 'breakfast') {
+    if (avgScore >= 80) return '다음 아침도 단백질 챙겨요';
+    if (avgScore >= 60) return '아침엔 달걀+채소 추천해요';
+    return '아침은 저GI로 시작해요';
+  }
+
+  if (nextSlot === 'lunch') {
+    if (avgScore >= 80) return '점심도 채소 듬뿍 넣어요';
+    if (avgScore >= 60) return '점심엔 현미밥 어떠세요?';
+    return '점심엔 단백질 꼭 챙겨요';
+  }
+
+  if (avgScore >= 80) return '저녁도 가볍게 마무리해요';
+  if (avgScore >= 60) return '저녁엔 탄수화물 줄여봐요';
+  return '저녁은 채소 위주로 드세요';
+}
+
 function scoreColor(score: number): string {
   if (score >= 80) return '#1D9E75';
   if (score >= 60) return '#BA7517';
@@ -77,6 +113,8 @@ export function BloodSugarScoreBlock() {
     .sort((a, b) => b.timestamp - a.timestamp)
     .find((r) => r.comment)?.comment ?? null;
 
+  const nextMealSuggestion = getNextMealSuggestion(recordedSlots, avgScore);
+
   // 끼니별 평균 점수
   const mealAvg = Object.fromEntries(
     MEAL_SLOTS.map((slot) => {
@@ -120,6 +158,11 @@ export function BloodSugarScoreBlock() {
         </Text>
       ) : null}
 
+      {/* ⑤ 다음 끼니 제안 */}
+      <Text style={styles.nextMealSuggestion} numberOfLines={1}>
+        🍽 {nextMealSuggestion}
+      </Text>
+
       {/* ④ 끼니별 점수 바 */}
       {hasScore ? (
         <View style={styles.barsRow}>
@@ -150,12 +193,19 @@ export function BloodSugarScoreBlock() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(255,255,255,0.88)',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(29,158,117,0.18)',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     marginBottom: 10,
     width: '100%',
+    shadowColor: '#0F3F1A',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.09,
+    shadowRadius: 10,
+    elevation: 3,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -169,11 +219,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   titleText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#888',
   },
   countText: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#aaa',
   },
   scoreRow: {
@@ -183,17 +233,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   scoreNumber: {
-    fontSize: 32,
+    fontSize: 38,
     fontWeight: 'bold',
-    lineHeight: 36,
+    lineHeight: 42,
   },
   scoreLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
   },
   comment: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#0F6E56',
+    marginBottom: 2,
+  },
+  nextMealSuggestion: {
+    fontSize: 12,
+    color: '#555',
     marginBottom: 6,
   },
   barsRow: {
@@ -207,22 +262,22 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   barMealLabel: {
-    fontSize: 9,
+    fontSize: 10,
     color: '#999',
     marginBottom: 2,
   },
   barTrack: {
-    height: 4,
-    borderRadius: 2,
+    height: 5,
+    borderRadius: 3,
     backgroundColor: 'rgba(0,0,0,0.06)',
     overflow: 'hidden',
   },
   barFill: {
-    height: 4,
-    borderRadius: 2,
+    height: 5,
+    borderRadius: 3,
   },
   barScore: {
-    fontSize: 9,
+    fontSize: 10,
     color: '#999',
     marginTop: 2,
   },
