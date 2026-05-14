@@ -115,63 +115,70 @@ function RecordCard({ record, onPress, onLongPress, isEditMode, onDelete }: Reco
   const tags = nutritionTagsFor(record);
   const description = representativeFoodLabel(record);
 
+  const cardBody = (
+    <MontageCard style={styles.recordCard}>
+      <View style={styles.cardLeft}>
+        <Text style={styles.mealTitle}>{MEAL_LABEL[record.mealType]} 식사</Text>
+        <Text style={styles.timeText}>{formatTimeAMPM(record.timestamp)}</Text>
+        <View style={styles.calorieRow}>
+          <Text style={[styles.calorieValue, { color: mealColor }]}>
+            {cals.toLocaleString('ko-KR')}
+          </Text>
+          <Text style={[styles.calorieUnit, { color: mealColor }]}> kcal</Text>
+        </View>
+        <Text style={styles.foodDesc} numberOfLines={2}>{description}</Text>
+        {tags.length > 0 && (
+          <View style={styles.tagsRow}>
+            {tags.map((t) => (
+              <View
+                key={t}
+                style={[styles.tag, { backgroundColor: mealColor + '22' }]}
+              >
+                <Text style={[styles.tagText, { color: mealColor }]}>{t}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+      <View style={styles.cardRight}>
+        <View style={[styles.avatar, { backgroundColor: mealColor + '33' }]}>
+          <Text style={styles.avatarEmoji}>{MEAL_EMOJI[record.mealType]}</Text>
+        </View>
+        {record.imageUri ? (
+          <Image source={{ uri: record.imageUri }} style={styles.thumb} resizeMode="cover" />
+        ) : (
+          <View style={[styles.thumb, styles.thumbPlaceholder]}>
+            <Text style={{ fontSize: 28 }}>🍽️</Text>
+          </View>
+        )}
+      </View>
+    </MontageCard>
+  );
+
+  if (isEditMode) {
+    return (
+      <View style={[styles.cardPress, styles.cardEditWrap]}>
+        {cardBody}
+        <Pressable
+          style={styles.deleteBadge}
+          onPress={onDelete}
+          hitSlop={12}
+          accessibilityLabel="기록 삭제"
+        >
+          <Text style={styles.deleteBadgeText}>×</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <Pressable
-      onPress={isEditMode ? undefined : onPress}
-      onLongPress={isEditMode ? undefined : onLongPress}
+      onPress={onPress}
+      onLongPress={onLongPress}
       delayLongPress={400}
-      style={({ pressed }) => [
-        styles.cardPress,
-        !isEditMode && pressed && styles.cardPressed,
-      ]}
+      style={({ pressed }) => [styles.cardPress, pressed && styles.cardPressed]}
     >
-      <MontageCard style={styles.recordCard}>
-        <View style={styles.cardLeft}>
-          <Text style={styles.mealTitle}>{MEAL_LABEL[record.mealType]} 식사</Text>
-          <Text style={styles.timeText}>{formatTimeAMPM(record.timestamp)}</Text>
-          <View style={styles.calorieRow}>
-            <Text style={[styles.calorieValue, { color: mealColor }]}>
-              {cals.toLocaleString('ko-KR')}
-            </Text>
-            <Text style={[styles.calorieUnit, { color: mealColor }]}> kcal</Text>
-          </View>
-          <Text style={styles.foodDesc} numberOfLines={2}>{description}</Text>
-          {tags.length > 0 && (
-            <View style={styles.tagsRow}>
-              {tags.map((t) => (
-                <View
-                  key={t}
-                  style={[styles.tag, { backgroundColor: mealColor + '22' }]}
-                >
-                  <Text style={[styles.tagText, { color: mealColor }]}>{t}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-        <View style={styles.cardRight}>
-          <View style={[styles.avatar, { backgroundColor: mealColor + '33' }]}>
-            <Text style={styles.avatarEmoji}>{MEAL_EMOJI[record.mealType]}</Text>
-          </View>
-          {record.imageUri ? (
-            <Image source={{ uri: record.imageUri }} style={styles.thumb} resizeMode="cover" />
-          ) : (
-            <View style={[styles.thumb, styles.thumbPlaceholder]}>
-              <Text style={{ fontSize: 28 }}>🍽️</Text>
-            </View>
-          )}
-        </View>
-        {isEditMode && (
-          <Pressable
-            style={styles.deleteBadge}
-            onPress={onDelete}
-            hitSlop={10}
-            accessibilityLabel="기록 삭제"
-          >
-            <Text style={styles.deleteBadgeText}>×</Text>
-          </Pressable>
-        )}
-      </MontageCard>
+      {cardBody}
     </Pressable>
   );
 }
@@ -574,6 +581,7 @@ const styles = StyleSheet.create({
 
   cardPress: { borderRadius: RADIUS.extraLarge },
   cardPressed: { opacity: 0.85, transform: [{ scale: 0.99 }] },
+  cardEditWrap: { position: 'relative' },
   recordCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -583,8 +591,8 @@ const styles = StyleSheet.create({
   },
   deleteBadge: {
     position: 'absolute',
-    top: -10,
-    right: -10,
+    top: 6,
+    right: 6,
     width: 28,
     height: 28,
     borderRadius: 14,

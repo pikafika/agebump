@@ -183,12 +183,18 @@ async function callGeminiApiOnce(
   generationConfig: Record<string, unknown>,
 ): Promise<string> {
   let url: string;
+  const publicApiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
   if (Platform.OS === 'web') {
-    url = '/api/gemini-proxy';
+    // 로컬 개발 환경: EXPO_PUBLIC_GEMINI_API_KEY가 있으면 직접 호출
+    // 프로덕션(Vercel): 해당 키가 없으므로 서버사이드 프록시 사용
+    if (publicApiKey && !publicApiKey.startsWith('your_')) {
+      url = `${GEMINI_API_URL}?key=${publicApiKey}`;
+    } else {
+      url = '/api/gemini-proxy';
+    }
   } else {
-    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-    if (!apiKey || apiKey.startsWith('your_')) throw new GeminiApiKeyError();
-    url = `${GEMINI_API_URL}?key=${apiKey}`;
+    if (!publicApiKey || publicApiKey.startsWith('your_')) throw new GeminiApiKeyError();
+    url = `${GEMINI_API_URL}?key=${publicApiKey}`;
   }
 
   let response: Response;

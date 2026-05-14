@@ -191,6 +191,17 @@ export function CameraScreen() {
               autoFocus
             />
           </View>
+        ) : Platform.OS === 'web' ? (
+          /* 웹: 카메라 미리보기 없음 — 안내 텍스트 표시 */
+          <View style={styles.webCameraHint}>
+            <Text style={styles.webCameraHintIcon}>📷</Text>
+            <Text style={styles.webCameraHintText}>
+              {mode === '성분표'
+                ? '성분표를 촬영하거나\n갤러리에서 사진을 선택하세요'
+                : '아래 버튼을 눌러\n음식을 촬영하세요'}
+            </Text>
+            <Text style={styles.webCameraHintSub}>또는 우측 상단 갤러리에서 불러오기</Text>
+          </View>
         ) : (
           /* 뷰파인더 코너 가이드 */
           <View style={styles.viewfinderGuide}>
@@ -444,6 +455,28 @@ const styles = StyleSheet.create({
   },
 
   analyzeRow: { paddingVertical: SPACING.pt08 },
+
+  /* ── 웹 카메라 안내 ── */
+  webCameraHint: {
+    flex: 1,
+    alignItems: 'center' as const,
+    justifyContent: 'center',
+    gap: SPACING.pt12,
+    paddingHorizontal: SPACING.pt32,
+  },
+  webCameraHintIcon: { fontSize: 56 },
+  webCameraHintText: {
+    ...TYPOGRAPHY.body1,
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center' as const,
+    lineHeight: 26,
+    fontWeight: FONT_WEIGHT.medium,
+  },
+  webCameraHintSub: {
+    ...TYPOGRAPHY.caption1,
+    color: 'rgba(255,255,255,0.4)',
+    textAlign: 'center' as const,
+  },
 });
 
 export default CameraScreen;
