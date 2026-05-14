@@ -229,7 +229,7 @@ export function GuideScreen() {
     }
 
     Alert.alert('저장 완료', 'AI 가이드가 저장되었습니다.', [
-      { text: '확인', onPress: () => router.back() },
+      { text: '확인', onPress: () => router.canGoBack() ? router.back() : router.replace('/(tabs)') },
     ]);
   }
 
@@ -242,7 +242,7 @@ export function GuideScreen() {
         <View style={styles.emptyWrap}>
           <Text style={{ fontSize: 52, marginBottom: SPACING.pt08 }}>🔍</Text>
           <Text style={styles.emptyTitle}>{contextError}</Text>
-          <MontageButton label="돌아가기" onPress={() => router.back()} size="medium" />
+          <MontageButton label="돌아가기" onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} size="medium" />
         </View>
       </SafeAreaView>
     );
@@ -265,7 +265,7 @@ export function GuideScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.headerSide}>
+        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} hitSlop={12} style={styles.headerSide}>
           <Text style={styles.headerClose}>×</Text>
         </Pressable>
         <Text style={styles.headerTitle}>{screenTitle}</Text>

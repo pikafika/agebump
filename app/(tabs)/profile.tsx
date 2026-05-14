@@ -199,7 +199,7 @@ export function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.headerSide}>
+        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} hitSlop={12} style={styles.headerSide}>
           <Text style={styles.headerArrow}>←</Text>
         </Pressable>
         <Text style={styles.title}>계정</Text>
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.pt20,
-    paddingTop: SPACING.pt08,
+    paddingTop: SPACING.pt20,
     paddingBottom: SPACING.pt12,
   },
   headerSide: { width: 32, alignItems: 'center' },

@@ -324,7 +324,13 @@ export function AnalysisScreen() {
       timestamp: Date.now(),
       mealType,
       foods: result.foods,
-      imageUri: imageUri ? decodeURIComponent(imageUri) : undefined,
+      imageUri: imageUri
+        ? decodeURIComponent(imageUri)
+        : webSource
+          ? webSource.kind === 'base64'
+            ? `data:image/jpeg;base64,${webSource.data}`
+            : webSource.data
+          : undefined,
       gi_index: Math.round(avgGi),
       carbs_g: sumCarbs,
       fiber_g: fiber,
@@ -357,6 +363,11 @@ export function AnalysisScreen() {
 
   const savedRecord = recordId ? getRecordById(recordId) : undefined;
   const decodedUri = (imageUri ? decodeURIComponent(imageUri) : null)
+    ?? (webSource
+      ? webSource.kind === 'base64'
+        ? `data:image/jpeg;base64,${webSource.data}`
+        : webSource.data
+      : null)
     ?? (savedRecord?.imageUri ?? null);
   const allFoods: FoodItem[] = result?.foods ?? [];
   const totalCarbs   = allFoods.reduce((s, f) => s + f.carbs, 0);
@@ -376,7 +387,7 @@ export function AnalysisScreen() {
           message={errorMessage}
           detail={errorDetail ?? undefined}
           isNetwork={isNetworkError}
-          onRetry={isNetworkError ? runAnalysis : () => router.back()}
+          onRetry={isNetworkError ? runAnalysis : () => router.canGoBack() ? router.back() : router.replace('/(tabs)')}
         />
       </SafeAreaView>
     );
@@ -387,7 +398,7 @@ export function AnalysisScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.headerSide}>
+        <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} hitSlop={12} style={styles.headerSide}>
           <Text style={styles.headerArrow}>←</Text>
         </Pressable>
         <Text style={styles.headerTitle}>
@@ -513,24 +524,10 @@ export function AnalysisScreen() {
           {!isViewingSaved && (
             <MontageButton label="저장하기" onPress={handleSave} size="large" fullWidth />
           )}
-          <MontageButton
-            label={savedRecord?.aiGuide ? '🔄 AI 가이드 다시 생성' : '🤖 AI 가이드 받기'}
-            onPress={() => {
-              const params: string[] = [];
-              if (recordId) params.push(`recordId=${encodeURIComponent(recordId)}`);
-              if (savedRecord?.timestamp) params.push(`ts=${savedRecord.timestamp}`);
-              if (savedRecord?.aiGuide) params.push('regenerate=1');
-              const qs = params.join('&');
-              router.push(qs ? `/guide?${qs}` : '/guide');
-            }}
-            variant="outlined"
-            size="large"
-            fullWidth
-          />
           {isViewingSaved && (
             <MontageButton
               label="목록으로 돌아가기"
-              onPress={() => router.back()}
+              onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}
               variant="text"
               size="large"
               fullWidth
@@ -570,7 +567,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.pt20,
-    paddingTop: SPACING.pt08,
+    paddingTop: SPACING.pt20,
     paddingBottom: SPACING.pt12,
   },
   headerSide: { width: 32, alignItems: 'center' },
