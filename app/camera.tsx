@@ -18,8 +18,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MontageButton } from '../src/components/montage/MontageButton';
 import { COLORS, FONT_WEIGHT, RADIUS, SPACING, SQUIRCLE, TYPOGRAPHY } from '../src/constants/theme';
-import { setPendingImageUri } from '../src/store/pendingImageStore';
-import { resizeImage, validateImageSize } from '../src/utils/imageUtils';
+import { setPendingBase64 } from '../src/store/pendingImageStore';
+import { imageToBase64, resizeImage, validateImageSize } from '../src/utils/imageUtils';
 
 type InputMode = '촬영' | '성분표' | '직접입력';
 const MODES: InputMode[] = ['촬영', '성분표', '직접입력'];
@@ -46,7 +46,8 @@ export function CameraScreen() {
     }
     const resizedUri = await resizeImage(uri);
     if (Platform.OS === 'web') {
-      setPendingImageUri(resizedUri);
+      const base64 = await imageToBase64(resizedUri);
+      setPendingBase64(base64);
       router.replace('/analysis');
     } else {
       router.replace(`/analysis?imageUri=${encodeURIComponent(resizedUri)}`);
@@ -54,7 +55,7 @@ export function CameraScreen() {
   }
 
   // ── 권한 화면 ────────────────────────────────────────────────────────────────
-  if (Platform.OS !== 'web' && !permission?.granted) {
+  if (!permission?.granted) {
     const canAsk = !permission || permission.canAskAgain;
     return (
       <View style={styles.container}>
@@ -90,19 +91,6 @@ export function CameraScreen() {
   // ── 이벤트 핸들러 ─────────────────────────────────────────────────────────────
   async function handleCapture() {
     if (isLoading) return;
-    if (Platform.OS === 'web') {
-      setLoading(true);
-      try {
-        const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.9 });
-        if (result.canceled || !result.assets[0]) return;
-        await navigateToAnalysis(result.assets[0].uri);
-      } catch (err) {
-        Alert.alert('오류', err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
     setLoading(true);
     try {
       const photo = await cameraRef.current?.takePictureAsync({ quality: 0.9 });
@@ -146,7 +134,7 @@ export function CameraScreen() {
   return (
     <View style={styles.container}>
       {/* 카메라 / 텍스트 배경 — 전체 화면 */}
-      {mode !== '직접입력' && Platform.OS !== 'web' ? (
+      {mode !== '직접입력' ? (
         <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
       ) : (
         <View style={[StyleSheet.absoluteFill, styles.textBg]} />
@@ -190,17 +178,6 @@ export function CameraScreen() {
               onSubmitEditing={handleTextAnalyze}
               autoFocus
             />
-          </View>
-        ) : Platform.OS === 'web' ? (
-          /* 웹: 카메라 미리보기 없음 — 안내 텍스트 표시 */
-          <View style={styles.webCameraHint}>
-            <Text style={styles.webCameraHintIcon}>📷</Text>
-            <Text style={styles.webCameraHintText}>
-              {mode === '성분표'
-                ? '성분표를 촬영하거나\n갤러리에서 사진을 선택하세요'
-                : '아래 버튼을 눌러\n음식을 촬영하세요'}
-            </Text>
-            <Text style={styles.webCameraHintSub}>또는 우측 상단 갤러리에서 불러오기</Text>
           </View>
         ) : (
           /* 뷰파인더 코너 가이드 */
@@ -456,27 +433,6 @@ const styles = StyleSheet.create({
 
   analyzeRow: { paddingVertical: SPACING.pt08 },
 
-  /* ── 웹 카메라 안내 ── */
-  webCameraHint: {
-    flex: 1,
-    alignItems: 'center' as const,
-    justifyContent: 'center',
-    gap: SPACING.pt12,
-    paddingHorizontal: SPACING.pt32,
-  },
-  webCameraHintIcon: { fontSize: 56 },
-  webCameraHintText: {
-    ...TYPOGRAPHY.body1,
-    color: 'rgba(255,255,255,0.8)',
-    textAlign: 'center' as const,
-    lineHeight: 26,
-    fontWeight: FONT_WEIGHT.medium,
-  },
-  webCameraHintSub: {
-    ...TYPOGRAPHY.caption1,
-    color: 'rgba(255,255,255,0.4)',
-    textAlign: 'center' as const,
-  },
 });
 
 export default CameraScreen;

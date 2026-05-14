@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -192,6 +193,7 @@ export function HistoryScreen() {
   const [isMonthExpanded, setIsMonthExpanded] = useState(false);
   const [viewMonthAnchor, setViewMonthAnchor] = useState<string>(today);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<FoodRecord | null>(null);
 
   const todayRecords = useFoodStore((s) => s.records);
   const deleteRecord = useFoodStore((s) => s.deleteRecord);
@@ -283,30 +285,21 @@ export function HistoryScreen() {
     [deleteRecord],
   );
 
-  // 수정 모드 삭제: 오늘이면 store에서 삭제, 과거면 AsyncStorage에서 직접 삭제
+  const doConfirmedDelete = useCallback(() => {
+    if (!pendingDelete) return;
+    if (isToday) {
+      deleteRecord(pendingDelete.id);
+    } else {
+      setPastRecords((prev) => prev.filter((r) => r.id !== pendingDelete.id));
+      persistDeleteRecord(pendingDelete.id, pendingDelete.timestamp);
+    }
+    setPendingDelete(null);
+  }, [pendingDelete, isToday, deleteRecord]);
+
+  // 수정 모드 삭제: 커스텀 확인 모달 표시
   const handleDeleteInEditMode = useCallback(
-    (record: FoodRecord) => {
-      Alert.alert(
-        '기록 삭제',
-        '이 식사 기록을 삭제할까요? 되돌릴 수 없습니다.',
-        [
-          { text: '취소', style: 'cancel' },
-          {
-            text: '삭제',
-            style: 'destructive',
-            onPress: () => {
-              if (isToday) {
-                deleteRecord(record.id);
-              } else {
-                setPastRecords((prev) => prev.filter((r) => r.id !== record.id));
-                persistDeleteRecord(record.id, record.timestamp);
-              }
-            },
-          },
-        ],
-      );
-    },
-    [deleteRecord, isToday],
+    (record: FoodRecord) => { setPendingDelete(record); },
+    [],
   );
 
   const canEnterEditMode = orderedRecords.length > 0;
@@ -455,6 +448,39 @@ export function HistoryScreen() {
           />
         ))}
       </ScrollView>
+
+      {/* ── 삭제 확인 모달 ── */}
+      <Modal
+        visible={!!pendingDelete}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPendingDelete(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setPendingDelete(null)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <View style={styles.modalIconCircle}>
+              <Text style={styles.modalIcon}>🗑️</Text>
+            </View>
+            <Text style={styles.modalTitle}>기록 삭제</Text>
+            <Text style={styles.modalBody}>이 식사 기록을 삭제할까요?</Text>
+            <Text style={styles.modalCaption}>삭제 후 복구할 수 없습니다.</Text>
+            <View style={styles.modalButtons}>
+              <Pressable
+                style={[styles.modalBtn, styles.modalBtnCancel]}
+                onPress={() => setPendingDelete(null)}
+              >
+                <Text style={styles.modalBtnCancelText}>취소</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.modalBtn, styles.modalBtnDelete]}
+                onPress={doConfirmedDelete}
+              >
+                <Text style={styles.modalBtnDeleteText}>삭제</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -696,6 +722,88 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.pt32,
   },
   emptyAction: { marginTop: SPACING.pt16 },
+
+  // ── 삭제 확인 모달 ──
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: SPACING.pt32,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: COLORS.background.elevated,
+    borderRadius: RADIUS.extraLarge,
+    paddingHorizontal: SPACING.pt24,
+    paddingTop: SPACING.pt28,
+    paddingBottom: SPACING.pt24,
+    alignItems: 'center',
+    gap: SPACING.pt08,
+    ...SQUIRCLE,
+    shadowColor: '#171719',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  modalIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(255,66,66,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.pt04,
+  },
+  modalIcon: { fontSize: 28 },
+  modalTitle: {
+    ...TYPOGRAPHY.heading2,
+    color: COLORS.label.strong,
+    fontWeight: FONT_WEIGHT.bold,
+    marginTop: SPACING.pt04,
+  },
+  modalBody: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.label.neutral,
+    textAlign: 'center',
+  },
+  modalCaption: {
+    ...TYPOGRAPHY.caption1,
+    color: COLORS.label.assistive,
+    textAlign: 'center',
+    marginBottom: SPACING.pt08,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: SPACING.pt08,
+    marginTop: SPACING.pt08,
+    width: '100%',
+  },
+  modalBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: RADIUS.large,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...SQUIRCLE,
+  },
+  modalBtnCancel: {
+    backgroundColor: COLORS.fill.strong,
+  },
+  modalBtnCancelText: {
+    ...TYPOGRAPHY.label1,
+    color: COLORS.label.normal,
+    fontWeight: FONT_WEIGHT.semiBold,
+  },
+  modalBtnDelete: {
+    backgroundColor: COLORS.status.negative,
+  },
+  modalBtnDeleteText: {
+    ...TYPOGRAPHY.label1,
+    color: '#fff',
+    fontWeight: FONT_WEIGHT.semiBold,
+  },
 });
 
 export default HistoryScreen;

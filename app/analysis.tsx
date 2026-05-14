@@ -32,7 +32,7 @@ import {
 import { useFoodStore } from '../src/store/foodStore';
 import { getMemo, setMemo as persistMemo } from '../src/store/memoStore';
 import { type FoodAnalysisResult, type FoodItem, type FoodRecord, type MealType } from '../src/types/food';
-import { getPendingImageUri, clearPendingImageUri } from '../src/store/pendingImageStore';
+import { clearPendingBase64, clearPendingImageUri, getPendingBase64, getPendingImageUri } from '../src/store/pendingImageStore';
 import { imageToBase64 } from '../src/utils/imageUtils';
 
 function detectMealType(): MealType {
@@ -201,11 +201,14 @@ export function AnalysisScreen() {
   const [mealType, setMealType] = useState<MealType>(detectMealType);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
-  const [pendingUri] = useState<string | null>(() => {
+  // 웹 카메라 경로: base64(camera.tsx에서 변환 완료) 또는 URI(레거시 폴백)
+  type WebSource = { kind: 'base64'; data: string } | { kind: 'uri'; data: string };
+  const [webSource] = useState<WebSource | null>(() => {
     if (Platform.OS === 'web' && !imageUri && !foodName && !recordId) {
+      const b64 = getPendingBase64();
+      if (b64) { clearPendingBase64(); return { kind: 'base64', data: b64 }; }
       const uri = getPendingImageUri();
-      clearPendingImageUri();
-      return uri;
+      if (uri) { clearPendingImageUri(); return { kind: 'uri', data: uri }; }
     }
     return null;
   });
@@ -239,8 +242,11 @@ export function AnalysisScreen() {
       } else if (imageUri) {
         const base64 = await imageToBase64(decodeURIComponent(imageUri));
         res = await analyzeFood(base64);
-      } else if (pendingUri) {
-        const base64 = await imageToBase64(pendingUri);
+      } else if (webSource) {
+        // base64는 camera.tsx에서 이미 변환 완료 → 직접 사용; URI 폴백만 재변환
+        const base64 = webSource.kind === 'base64'
+          ? webSource.data
+          : await imageToBase64(webSource.data);
         res = await analyzeFood(base64);
       } else if (foodName) {
         res = await analyzeFoodText(decodeURIComponent(foodName));
@@ -306,16 +312,22 @@ export function AnalysisScreen() {
       timestamp: Date.now(),
       mealType,
       foods: result.foods,
-      imageUri: imageUri ? decodeURIComponent(imageUri) : (pendingUri ?? undefined),
+      imageUri: imageUri ? decodeURIComponent(imageUri) : undefined,
     };
     addRecord(record);
     // 메모는 별도 secure-store에 저장 (record envelope에는 평문으로 남기지 않음)
     if (memo.trim().length > 0) {
       await persistMemo(newId, memo);
     }
-    Alert.alert('저장 완료', '식사 기록이 저장되었습니다.', [
-      { text: '확인', onPress: () => router.replace('/(tabs)') },
-    ]);
+    if (Platform.OS === 'web') {
+      // 웹: window.alert은 콜백 미지원 — 동기 다이얼로그 닫히면 바로 이동
+      Alert.alert('저장 완료', '식사 기록이 저장되었습니다.');
+      router.replace('/(tabs)');
+    } else {
+      Alert.alert('저장 완료', '식사 기록이 저장되었습니다.', [
+        { text: '확인', onPress: () => router.replace('/(tabs)') },
+      ]);
+    }
   }
 
   // 이미 저장된 기록의 메모 편집 시 blur 시점에 secure-store에 즉시 반영
@@ -325,8 +337,7 @@ export function AnalysisScreen() {
   }
 
   const savedRecord = recordId ? getRecordById(recordId) : undefined;
-  const decodedUri = pendingUri
-    ?? (imageUri ? decodeURIComponent(imageUri) : null)
+  const decodedUri = (imageUri ? decodeURIComponent(imageUri) : null)
     ?? (savedRecord?.imageUri ?? null);
   const allFoods: FoodItem[] = result?.foods ?? [];
   const totalCarbs   = allFoods.reduce((s, f) => s + f.carbs, 0);
