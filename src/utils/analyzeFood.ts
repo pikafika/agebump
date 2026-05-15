@@ -115,7 +115,7 @@ export async function analyzeFoodScore(imageUri: string): Promise<AnalyzeFoodRes
     const food_types = (obj['food_types'] as FoodTypeCategory[]) ?? [];
     const comment = String(obj['comment'] ?? '');
 
-    const score = calculateScore({ gi: gi_index, carbs: carbs_g, fiber: fiber_g, foods: food_types });
+    const { score } = calculateScore({ gi: gi_index, carbs: carbs_g, fiber: fiber_g, foods: food_types });
     const scoreLabel = getScoreLabel(score);
 
     return { gi_index, carbs_g, fiber_g, food_types, comment, score, scoreLabel };
@@ -145,7 +145,7 @@ export async function analyzeFoodTextScore(foodName: string): Promise<AnalyzeFoo
     const food_types = (obj['food_types'] as FoodTypeCategory[]) ?? [];
     const comment = String(obj['comment'] ?? '');
 
-    const score = calculateScore({ gi: gi_index, carbs: carbs_g, fiber: fiber_g, foods: food_types });
+    const { score } = calculateScore({ gi: gi_index, carbs: carbs_g, fiber: fiber_g, foods: food_types });
     const scoreLabel = getScoreLabel(score);
 
     return { gi_index, carbs_g, fiber_g, food_types, comment, score, scoreLabel };

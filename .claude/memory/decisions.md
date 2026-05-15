@@ -1565,3 +1565,47 @@ src/store/foodStore.ts
 src/store/migrations.ts
 src/store/userProfileStore.ts
 작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 21:26:22]
+변경 파일: (변경 파일 없음)
+작업 요약: feat: Firebase 익명 인증 + 구글 계정 연결 + 서비스 분석 수집- firebase JS SDK 설치, src/lib/firebase.ts 초기화 (Auth + Firestore)- 익명 로그인 자동 실행 + linkWithPopup 구글 연결  - credential-already-in-use 처리: 기존 계정으로 signInWithCredential 재시도- Firestore 동기화: food_records / user_profiles 컬렉션 (imageUri 제외)- syncStore: pendingSyncIds 추적, 로컬 우선 저장 후 Firestore 사이드이펙트- analyticsService: fire-and-forget 이벤트 수집 (food_analyzed, record_saved 등)- metro.config.js: COOP 헤더 unsafe-none 강제 (Firebase popup 팝업 지원)- profile.tsx: 구글 계정 연결 섹션 UI (미연결 / 연결 중 / 연결 완료)
+
+## [2026-05-16 00:01:02]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+app/analysis.tsx
+src/api/gemini.ts
+src/components/BloodSugarScoreBlock.tsx
+src/services/profileSyncService.ts
+src/store/userProfileStore.ts
+src/types/food.ts
+src/utils/analyzeFood.ts
+src/utils/scoreCalculator.ts
+작업 요약: feat: Firebase 익명 인증 + 구글 계정 연결 + 서비스 분석 수집- firebase JS SDK 설치, src/lib/firebase.ts 초기화 (Auth + Firestore)- 익명 로그인 자동 실행 + linkWithPopup 구글 연결  - credential-already-in-use 처리: 기존 계정으로 signInWithCredential 재시도- Firestore 동기화: food_records / user_profiles 컬렉션 (imageUri 제외)- syncStore: pendingSyncIds 추적, 로컬 우선 저장 후 Firestore 사이드이펙트- analyticsService: fire-and-forget 이벤트 수집 (food_analyzed, record_saved 등)- metro.config.js: COOP 헤더 unsafe-none 강제 (Firebase popup 팝업 지원)- profile.tsx: 구글 계정 연결 섹션 UI (미연결 / 연결 중 / 연결 완료)
+
+## [2026-05-16 00:06:11]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+app/analysis.tsx
+src/api/gemini.ts
+src/components/BloodSugarScoreBlock.tsx
+src/services/profileSyncService.ts
+src/store/userProfileStore.ts
+src/types/food.ts
+src/utils/analyzeFood.ts
+src/utils/scoreCalculator.ts
+작업 요약: feat: Firebase 익명 인증 + 구글 계정 연결 + 서비스 분석 수집- firebase JS SDK 설치, src/lib/firebase.ts 초기화 (Auth + Firestore)- 익명 로그인 자동 실행 + linkWithPopup 구글 연결  - credential-already-in-use 처리: 기존 계정으로 signInWithCredential 재시도- Firestore 동기화: food_records / user_profiles 컬렉션 (imageUri 제외)- syncStore: pendingSyncIds 추적, 로컬 우선 저장 후 Firestore 사이드이펙트- analyticsService: fire-and-forget 이벤트 수집 (food_analyzed, record_saved 등)- metro.config.js: COOP 헤더 unsafe-none 강제 (Firebase popup 팝업 지원)- profile.tsx: 구글 계정 연결 섹션 UI (미연결 / 연결 중 / 연결 완료)
+
+## [2026-05-16 00:12:49]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+app/analysis.tsx
+src/api/gemini.ts
+src/components/BloodSugarScoreBlock.tsx
+src/services/profileSyncService.ts
+src/store/authStore.ts
+src/store/userProfileStore.ts
+src/types/food.ts
+src/utils/analyzeFood.ts
+src/utils/scoreCalculator.ts
+작업 요약: feat: Firebase 익명 인증 + 구글 계정 연결 + 서비스 분석 수집- firebase JS SDK 설치, src/lib/firebase.ts 초기화 (Auth + Firestore)- 익명 로그인 자동 실행 + linkWithPopup 구글 연결  - credential-already-in-use 처리: 기존 계정으로 signInWithCredential 재시도- Firestore 동기화: food_records / user_profiles 컬렉션 (imageUri 제외)- syncStore: pendingSyncIds 추적, 로컬 우선 저장 후 Firestore 사이드이펙트- analyticsService: fire-and-forget 이벤트 수집 (food_analyzed, record_saved 등)- metro.config.js: COOP 헤더 unsafe-none 강제 (Firebase popup 팝업 지원)- profile.tsx: 구글 계정 연결 섹션 UI (미연결 / 연결 중 / 연결 완료)

@@ -1,9 +1,13 @@
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
-interface ProfileData {
+export interface ProfileData {
   nickname: string;
   dailyCalorieGoal: number;
+  age?: number;
+  gender?: 'male' | 'female';
+  height?: number;
+  weight?: number;
 }
 
 export async function upsertProfile(userId: string, profile: ProfileData): Promise<void> {
@@ -19,5 +23,9 @@ export async function fetchRemoteProfile(userId: string): Promise<ProfileData | 
   return {
     nickname: data.nickname ?? '',
     dailyCalorieGoal: data.dailyCalorieGoal ?? 2000,
+    age: typeof data.age === 'number' ? data.age : undefined,
+    gender: data.gender === 'male' || data.gender === 'female' ? data.gender : undefined,
+    height: typeof data.height === 'number' ? data.height : undefined,
+    weight: typeof data.weight === 'number' ? data.weight : undefined,
   };
 }

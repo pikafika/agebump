@@ -270,14 +270,39 @@ async function callGeminiApi(
 
 // ─── 공개 API ──────────────────────────────────────────────────────────────────
 
+export interface UserProfileContext {
+  age?: number;
+  gender?: 'male' | 'female';
+  height?: number;
+  weight?: number;
+}
+
+function buildUserProfileContext(profile?: UserProfileContext): string {
+  if (!profile) return '';
+  const parts: string[] = [];
+  if (profile.age) parts.push(`나이: ${profile.age}세`);
+  if (profile.gender) parts.push(`성별: ${profile.gender === 'male' ? '남성' : '여성'}`);
+  if (profile.height && profile.weight) {
+    const bmi = profile.weight / Math.pow(profile.height / 100, 2);
+    const bmiLabel = bmi >= 30 ? '비만' : bmi >= 25 ? '과체중' : bmi >= 18.5 ? '정상' : '저체중';
+    parts.push(`BMI: ${bmi.toFixed(1)} (${bmiLabel})`);
+  }
+  if (parts.length === 0) return '';
+  return `\n\n[사용자 신체 정보 - comment 작성 시 참고]\n${parts.join(' / ')}\n→ comment는 이 사용자에게 특히 주의할 점 중심으로 20자 이내로 작성`;
+}
+
 /**
  * 음식 이미지를 base64로 받아 Gemini API로 영양 정보를 분석한다.
  * JSON 파싱 실패 시 1회 재시도하고, 재시도 후도 실패 시 GeminiParseError를 throw한다.
  */
-export async function analyzeFood(imageBase64: string): Promise<FoodAnalysisResult> {
+export async function analyzeFood(
+  imageBase64: string,
+  userProfile?: UserProfileContext,
+): Promise<FoodAnalysisResult> {
+  const promptText = FOOD_ANALYSIS_PROMPT + buildUserProfileContext(userProfile);
   const parts: GeminiPart[] = [
     { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
-    { text: FOOD_ANALYSIS_PROMPT },
+    { text: promptText },
   ];
 
   const attempt = async (): Promise<FoodAnalysisResult> => {
@@ -299,9 +324,13 @@ export async function analyzeFood(imageBase64: string): Promise<FoodAnalysisResu
  * 음식 이름(텍스트)만으로 Gemini API에 영양 정보를 요청한다.
  * JSON 파싱 실패 시 1회 재시도하고, 재시도 후도 실패 시 GeminiParseError를 throw한다.
  */
-export async function analyzeFoodText(foodName: string): Promise<FoodAnalysisResult> {
+export async function analyzeFoodText(
+  foodName: string,
+  userProfile?: UserProfileContext,
+): Promise<FoodAnalysisResult> {
+  const promptText = FOOD_ANALYSIS_PROMPT + buildUserProfileContext(userProfile);
   const parts: GeminiPart[] = [
-    { text: `${FOOD_ANALYSIS_PROMPT}\n분석할 음식: ${foodName}` },
+    { text: `${promptText}\n분석할 음식: ${foodName}` },
   ];
 
   const attempt = async (): Promise<FoodAnalysisResult> => {

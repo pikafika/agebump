@@ -29,8 +29,14 @@ import { analyticsService } from '../../src/services/analyticsService';
 import { useAuthStore } from '../../src/store/authStore';
 import { useFoodStore } from '../../src/store/foodStore';
 import {
+  AGE_MAX,
+  AGE_MIN,
   DAILY_CALORIE_GOAL_MAX,
   DAILY_CALORIE_GOAL_MIN,
+  HEIGHT_MAX,
+  HEIGHT_MIN,
+  WEIGHT_MAX,
+  WEIGHT_MIN,
   useUserProfileStore,
 } from '../../src/store/userProfileStore';
 import { ONBOARDING_KEY } from '../onboarding';
@@ -92,10 +98,18 @@ function Section({ title, children }: SectionProps) {
 export function ProfileScreen() {
   const nickname = useUserProfileStore((s) => s.nickname);
   const dailyCalorieGoal = useUserProfileStore((s) => s.dailyCalorieGoal);
+  const age = useUserProfileStore((s) => s.age);
+  const gender = useUserProfileStore((s) => s.gender);
+  const height = useUserProfileStore((s) => s.height);
+  const weight = useUserProfileStore((s) => s.weight);
   const setNickname = useUserProfileStore((s) => s.setNickname);
   const setDailyCalorieGoal = useUserProfileStore((s) => s.setDailyCalorieGoal);
+  const setAge = useUserProfileStore((s) => s.setAge);
+  const setGender = useUserProfileStore((s) => s.setGender);
+  const setHeight = useUserProfileStore((s) => s.setHeight);
+  const setWeight = useUserProfileStore((s) => s.setWeight);
 
-  const { user, isLinking, linkError, linkWithGoogle, clearLinkError } = useAuthStore();
+  const { user, isLinking, linkError, linkWithGoogle, unlinkGoogle, clearLinkError } = useAuthStore();
   const isLinked = !!user && !user.isAnonymous;
   const linkedEmail = isLinked
     ? (user.providerData.find((p) => p.providerId === 'google.com')?.email ?? user.email ?? '')
@@ -115,6 +129,13 @@ export function ProfileScreen() {
   const [nicknameDraft, setNicknameDraft] = useState('');
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalDraft, setGoalDraft] = useState('');
+  const [editingAge, setEditingAge] = useState(false);
+  const [ageDraft, setAgeDraft] = useState('');
+  const [editingGender, setEditingGender] = useState(false);
+  const [editingHeight, setEditingHeight] = useState(false);
+  const [heightDraft, setHeightDraft] = useState('');
+  const [editingWeight, setEditingWeight] = useState(false);
+  const [weightDraft, setWeightDraft] = useState('');
 
   function startEditNickname() {
     setNicknameDraft(nickname);
@@ -136,6 +157,37 @@ export function ProfileScreen() {
     }
     setEditingGoal(false);
   }
+
+  function startEditAge() {
+    setAgeDraft(age !== undefined ? String(age) : '');
+    setEditingAge(true);
+  }
+  function submitAge() {
+    const parsed = parseInt(ageDraft.replace(/[^0-9]/g, ''), 10);
+    setAge(Number.isFinite(parsed) && parsed >= AGE_MIN && parsed <= AGE_MAX ? parsed : undefined);
+    setEditingAge(false);
+  }
+
+  function startEditHeight() {
+    setHeightDraft(height !== undefined ? String(height) : '');
+    setEditingHeight(true);
+  }
+  function submitHeight() {
+    const parsed = parseInt(heightDraft.replace(/[^0-9]/g, ''), 10);
+    setHeight(Number.isFinite(parsed) && parsed >= HEIGHT_MIN && parsed <= HEIGHT_MAX ? parsed : undefined);
+    setEditingHeight(false);
+  }
+
+  function startEditWeight() {
+    setWeightDraft(weight !== undefined ? String(weight) : '');
+    setEditingWeight(true);
+  }
+  function submitWeight() {
+    const parsed = parseFloat(weightDraft.replace(/[^0-9.]/g, ''));
+    setWeight(Number.isFinite(parsed) && parsed >= WEIGHT_MIN && parsed <= WEIGHT_MAX ? parsed : undefined);
+    setEditingWeight(false);
+  }
+
 
   function confirmClearToday() {
     if (todayRecordsLength === 0) {
@@ -173,6 +225,17 @@ export function ProfileScreen() {
             void clearAllRecords();
           },
         },
+      ],
+    );
+  }
+
+  function confirmUnlinkGoogle() {
+    Alert.alert(
+      '구글 연결 해제',
+      '연결을 해제하면 기기 간 동기화가 중단됩니다. 기존 기록은 이 기기에 유지됩니다. 계속할까요?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '연결 해제', style: 'destructive', onPress: unlinkGoogle },
       ],
     );
   }
@@ -292,21 +355,138 @@ export function ProfileScreen() {
                 trailing="edit"
               />
             )}
+            <View style={styles.divider} />
+            {editingAge ? (
+              <View style={styles.rowEdit}>
+                <Text style={styles.rowLabel}>나이 (세)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={ageDraft}
+                  onChangeText={setAgeDraft}
+                  placeholder={`${AGE_MIN}–${AGE_MAX}`}
+                  placeholderTextColor={COLORS.label.assistive as string}
+                  keyboardType="number-pad"
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={submitAge}
+                  onBlur={submitAge}
+                  maxLength={3}
+                />
+              </View>
+            ) : (
+              <Row
+                label="나이"
+                value={age !== undefined ? `${age}세` : '미설정'}
+                onPress={startEditAge}
+                trailing="edit"
+              />
+            )}
+            <View style={styles.divider} />
+            {editingGender ? (
+              <View style={styles.rowEdit}>
+                <Text style={styles.rowLabel}>성별</Text>
+                <View style={styles.genderRow}>
+                  {(['male', 'female', undefined] as const).map((g) => {
+                    const label = g === 'male' ? '남성' : g === 'female' ? '여성' : '미설정';
+                    const active = gender === g;
+                    return (
+                      <Pressable
+                        key={label}
+                        style={[styles.genderChip, active && styles.genderChipActive]}
+                        onPress={() => { setGender(g); setEditingGender(false); }}
+                      >
+                        <Text style={[styles.genderChipText, active && styles.genderChipTextActive]}>
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : (
+              <Row
+                label="성별"
+                value={gender === 'male' ? '남성' : gender === 'female' ? '여성' : '미설정'}
+                onPress={() => setEditingGender(true)}
+                trailing="chevron"
+              />
+            )}
+            <View style={styles.divider} />
+            {editingHeight ? (
+              <View style={styles.rowEdit}>
+                <Text style={styles.rowLabel}>키 (cm)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={heightDraft}
+                  onChangeText={setHeightDraft}
+                  placeholder={`${HEIGHT_MIN}–${HEIGHT_MAX}`}
+                  placeholderTextColor={COLORS.label.assistive as string}
+                  keyboardType="number-pad"
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={submitHeight}
+                  onBlur={submitHeight}
+                  maxLength={3}
+                />
+              </View>
+            ) : (
+              <Row
+                label="키"
+                value={height !== undefined ? `${height} cm` : '미설정'}
+                onPress={startEditHeight}
+                trailing="edit"
+              />
+            )}
+            <View style={styles.divider} />
+            {editingWeight ? (
+              <View style={styles.rowEdit}>
+                <Text style={styles.rowLabel}>몸무게 (kg)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={weightDraft}
+                  onChangeText={setWeightDraft}
+                  placeholder={`${WEIGHT_MIN}–${WEIGHT_MAX}`}
+                  placeholderTextColor={COLORS.label.assistive as string}
+                  keyboardType="decimal-pad"
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={submitWeight}
+                  onBlur={submitWeight}
+                  maxLength={5}
+                />
+              </View>
+            ) : (
+              <Row
+                label="몸무게"
+                value={weight !== undefined ? `${weight} kg` : '미설정'}
+                onPress={startEditWeight}
+                trailing="edit"
+              />
+            )}
           </Section>
 
           {/* ── 계정 연결 ── */}
           <Section title="계정 연결">
-            {isLinked ? (
-              <Row
-                label="구글 계정"
-                value={linkedEmail}
-                trailing="none"
-              />
-            ) : isLinking ? (
+            {isLinking ? (
               <View style={styles.row}>
-                <Text style={styles.rowLabel}>구글로 연결 중...</Text>
+                <Text style={styles.rowLabel}>{isLinked ? '연결 해제 중...' : '구글로 연결 중...'}</Text>
                 <ActivityIndicator size="small" color={COLORS.primary.normal as string} />
               </View>
+            ) : isLinked ? (
+              <>
+                <Row
+                  label="구글 계정"
+                  value={linkedEmail}
+                  trailing="none"
+                />
+                <View style={styles.divider} />
+                <Row
+                  label="구글 연결 해제"
+                  onPress={confirmUnlinkGoogle}
+                  trailing="chevron"
+                  destructive
+                />
+              </>
             ) : (
               <Row
                 label="구글로 연결하기"
@@ -456,6 +636,30 @@ const styles = StyleSheet.create({
     color: COLORS.label.assistive,
     textAlign: 'center',
     marginTop: SPACING.pt08,
+  },
+
+  genderRow: {
+    flexDirection: 'row',
+    gap: SPACING.pt08,
+  },
+  genderChip: {
+    flex: 1,
+    paddingVertical: SPACING.pt08,
+    borderRadius: RADIUS.medium,
+    backgroundColor: COLORS.fill.normal,
+    alignItems: 'center',
+  },
+  genderChipActive: {
+    backgroundColor: COLORS.primary.normal,
+  },
+  genderChipText: {
+    ...TYPOGRAPHY.body2,
+    color: COLORS.label.alternative,
+    fontWeight: FONT_WEIGHT.medium,
+  },
+  genderChipTextActive: {
+    color: '#fff',
+    fontWeight: FONT_WEIGHT.semiBold,
   },
 });
 

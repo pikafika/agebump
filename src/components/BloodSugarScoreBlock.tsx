@@ -149,6 +149,9 @@ export function BloodSugarScoreBlock() {
             {getScoreLabel(avgScore!).label}
           </Text>
         )}
+        {hasScore && scoredRecords.some((r) => r.isPersonalized) && (
+          <Text style={styles.personalizedBadge}>★ 내 신체 기준</Text>
+        )}
       </View>
 
       {/* ③ AI 코멘트 */}
@@ -280,5 +283,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#999',
     marginTop: 2,
+  },
+  personalizedBadge: {
+    fontSize: 10,
+    color: '#1D9E75',
+    fontWeight: '600',
+    marginLeft: 4,
+    alignSelf: 'flex-end',
+    marginBottom: 4,
   },
 });

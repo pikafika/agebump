@@ -33,6 +33,7 @@ import { analyticsService } from '../src/services/analyticsService';
 import { useAuthStore } from '../src/store/authStore';
 import { useFoodStore } from '../src/store/foodStore';
 import { getMemo, setMemo as persistMemo } from '../src/store/memoStore';
+import { useUserProfileStore } from '../src/store/userProfileStore';
 import { type FoodAnalysisResult, type FoodItem, type FoodRecord, type FoodTypeCategory, type MealType } from '../src/types/food';
 import { clearPendingBase64, clearPendingImageUri, getPendingBase64, getPendingImageUri } from '../src/store/pendingImageStore';
 import { imageToBase64 } from '../src/utils/imageUtils';
@@ -194,6 +195,12 @@ export function AnalysisScreen() {
   }>();
   const { addRecord, setIsAnalyzing, getRecordById } = useFoodStore();
   const authUser = useAuthStore((s) => s.user);
+  const userProfile = useUserProfileStore((s) => ({
+    age: s.age,
+    gender: s.gender,
+    height: s.height,
+    weight: s.weight,
+  }));
   const isViewingSaved = Boolean(recordId);
 
   const [result, setResult] = useState<FoodAnalysisResult | null>(null);
@@ -246,15 +253,15 @@ export function AnalysisScreen() {
         setMealType(saved.mealType);
       } else if (imageUri) {
         const base64 = await imageToBase64(decodeURIComponent(imageUri));
-        res = await analyzeFood(base64);
+        res = await analyzeFood(base64, userProfile);
       } else if (webSource) {
         // base64는 camera.tsx에서 이미 변환 완료 → 직접 사용; URI 폴백만 재변환
         const base64 = webSource.kind === 'base64'
           ? webSource.data
           : await imageToBase64(webSource.data);
-        res = await analyzeFood(base64);
+        res = await analyzeFood(base64, userProfile);
       } else if (foodName) {
-        res = await analyzeFoodText(decodeURIComponent(foodName));
+        res = await analyzeFoodText(decodeURIComponent(foodName), userProfile);
       } else {
         throw new Error('이미지 또는 음식명이 필요합니다.');
       }
@@ -345,7 +352,7 @@ export function AnalysisScreen() {
     const sumCarbs = result.foods.reduce((s, f) => s + f.carbs, 0);
     const fiber = result.fiber_g ?? 0;
     const foodTypes = (result.food_types ?? []) as FoodTypeCategory[];
-    const score = calculateScore({ gi: avgGi, carbs: sumCarbs, fiber, foods: foodTypes });
+    const { score, isPersonalized } = calculateScore({ gi: avgGi, carbs: sumCarbs, fiber, foods: foodTypes, userProfile });
     const scoreLabel = getScoreLabel(score);
 
     const record: FoodRecord = {
@@ -366,6 +373,7 @@ export function AnalysisScreen() {
       food_types: foodTypes,
       score,
       scoreLabel,
+      isPersonalized,
       comment: result.comment,
     };
     addRecord(record);

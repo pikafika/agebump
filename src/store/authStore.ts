@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   signInAnonymously,
   signInWithCredential,
+  unlink,
 } from 'firebase/auth';
 import { create } from 'zustand';
 import { auth } from '../lib/firebase';
@@ -18,6 +19,7 @@ interface AuthState {
 
   initialize: () => () => void;
   linkWithGoogle: () => void;
+  unlinkGoogle: () => void;
   clearLinkError: () => void;
 }
 
@@ -76,6 +78,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           }
         }
         const message = error instanceof Error ? error.message : '연결에 실패했어요.';
+        set({ isLinking: false, linkError: message });
+      });
+  },
+
+  unlinkGoogle: () => {
+    const { user } = get();
+    if (!user) return;
+    set({ isLinking: true, linkError: null });
+    unlink(user, 'google.com')
+      .then((updatedUser) => {
+        set({ user: updatedUser, isLinking: false });
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : '연결 해제에 실패했어요.';
         set({ isLinking: false, linkError: message });
       });
   },

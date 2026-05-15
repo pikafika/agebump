@@ -97,6 +97,8 @@ export interface FoodRecord {
   comment?: string;
   /** AI 가이드 결과 */
   aiGuide?: AIGuide;
+  /** 신체 정보(BMI·나이) 기반 개인화 점수가 적용된 경우 true */
+  isPersonalized?: boolean;
   /**
    * @deprecated 메모는 더 이상 record에 저장되지 않고 expo-secure-store에 분리 저장된다.
    * 기존 데이터 호환을 위해 타입에 남겨두지만 신규 코드에서는 사용하지 말 것.
