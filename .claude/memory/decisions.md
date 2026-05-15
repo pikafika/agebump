@@ -828,3 +828,273 @@ app/(tabs)/index.tsx
 .claude/memory/project_session_20260513.md
 app/(tabs)/index.tsx
 작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- camera.tsx: useCameraPermissions() 초기 null 반환 시 검정 화면 제거,  canAskAgain=false일 때 Linking.openSettings()로 설정 화면 안내- pendingImageStore.ts: 웹에서 data URI를 URL 파라미터 대신 모듈 변수로 전달- camera.tsx: 웹 갤러리 이미지를 pendingImageStore에 저장 후 /analysis 이동- analysis.tsx: 마운트 시 pendingImageStore에서 URI 읽어 분석 실행
+
+## [2026-05-14 08:53:14]
+변경 파일: (변경 파일 없음)
+작업 요약: fix: 칼로리 수치 오버플로우 수정 — 해상도 대응 동적 폰트 크기 계산useWindowDimensions 기반으로 가용 폭과 자릿수를 계산해calorieFs를 직접 결정. adjustsFontSizeToFit(iOS 전용) 제거.목표·남은 칼로리 metaValue도 adjustsFontSizeToFit 방어 적용.
+
+## [2026-05-14 09:06:43]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+작업 요약: fix: 칼로리 수치 오버플로우 수정 — 해상도 대응 동적 폰트 크기 계산useWindowDimensions 기반으로 가용 폭과 자릿수를 계산해calorieFs를 직접 결정. adjustsFontSizeToFit(iOS 전용) 제거.목표·남은 칼로리 metaValue도 adjustsFontSizeToFit 방어 적용.
+
+## [2026-05-14 09:41:58]
+변경 파일: .claude/memory/decisions.md
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 09:43:54]
+변경 파일: .claude/memory/decisions.md
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 10:16:47]
+변경 파일: .claude/memory/decisions.md
+app/camera.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 10:44:07]
+변경 파일: .claude/memory/decisions.md
+app/camera.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 10:46:37]
+변경 파일: .claude/memory/decisions.md
+app/camera.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 10:48:33]
+변경 파일: .claude/memory/decisions.md
+app/camera.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 10:53:52]
+변경 파일: .claude/memory/decisions.md
+app/camera.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 10:59:52]
+변경 파일: .claude/memory/decisions.md
+app/camera.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 11:00:31]
+변경 파일: .claude/memory/decisions.md
+app/camera.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 11:04:47]
+변경 파일: .claude/memory/decisions.md
+app/camera.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 11:07:22]
+변경 파일: .claude/memory/decisions.md
+app/camera.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 11:10:39]
+변경 파일: .claude/memory/decisions.md
+app/analysis.tsx
+app/camera.tsx
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 11:40:14]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/analysis.tsx
+app/camera.tsx
+src/store/pendingImageStore.ts
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 11:54:19]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/analysis.tsx
+app/camera.tsx
+src/store/pendingImageStore.ts
+작업 요약: fix: 카메라 검정 화면 및 갤러리 이미지 AI 분석 오류 수정- [gemini.ts] 웹 로컬 환경에서 EXPO_PUBLIC_GEMINI_API_KEY 직접 사용 (프록시 404 방지)- [camera.tsx] 웹에서 카메라 뷰 대신 안내 텍스트/아이콘 표시- [history.tsx] 수정 모드에서 삭제 버튼 터치 인식 불가 문제 해결
+
+## [2026-05-14 13:27:53]
+변경 파일: .claude/memory/decisions.md
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 13:28:30]
+변경 파일: .claude/memory/decisions.md
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 13:28:48]
+변경 파일: .claude/memory/decisions.md
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 13:29:38]
+변경 파일: .claude/memory/decisions.md
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 13:30:58]
+변경 파일: .claude/memory/decisions.md
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 13:47:50]
+변경 파일: .claude/memory/decisions.md
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 13:57:39]
+변경 파일: .claude/memory/decisions.md
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 14:59:09]
+변경 파일: .claude/memory/decisions.md
+app/analysis.tsx
+src/api/gemini.ts
+src/types/food.ts
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 15:02:26]
+변경 파일: .claude/memory/decisions.md
+app/analysis.tsx
+src/api/gemini.ts
+src/types/food.ts
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 15:06:19]
+변경 파일: .claude/memory/decisions.md
+app/analysis.tsx
+src/api/gemini.ts
+src/types/food.ts
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 15:19:11]
+변경 파일: .claude/memory/decisions.md
+app/analysis.tsx
+src/api/gemini.ts
+src/types/food.ts
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 15:37:49]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/index.tsx
+app/analysis.tsx
+src/api/gemini.ts
+src/types/food.ts
+작업 요약: fix: 웹 카메라 이미지 인식 실패 및 식단 일기 삭제 모달 개선- camera.tsx: 촬영 즉시 base64 변환 후 store에 저장(blob URL 불안정 문제 해결)- analysis.tsx: WebSource discriminated union으로 base64/URI 혼동 버그 수정- pendingImageStore.ts: base64 전용 저장 함수 추가- history.tsx: window.confirm 대신 커스텀 Modal로 삭제 확인 다이얼로그 교체(앱 디자인 톤앤매너 적용)
+
+## [2026-05-14 16:11:14]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+작업 요약: feat: 혈당 친화도 점수 시스템 추가- scoreCalculator: GI(35%) + 탄수화물(30%) + 식이섬유(20%) + 조합보너스(15%) 공식으로 0~100점 산출- analyzeFood: 이미지 URI → 리사이즈 → Gemini 호출 → 점수까지 원스텝 처리하는 독립 유틸- Gemini 프롬프트 확장: fiber_g, food_types, comment 필드 추가 (API 1회 호출로 통합)- FoodRecord/FoodAnalysisResult 타입에 gi_index, carbs_g, fiber_g, food_types, score, scoreLabel, comment 추가- handleSave(): 분석 결과에서 점수 계산 후 FoodRecord에 저장- BloodSugarScoreBlock: 홈 화면 kcal 아래 혈당 친화 점수 블록 (평균점수, 라벨, AI코멘트, 끼니별 바)
+
+## [2026-05-14 17:31:57]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+작업 요약: feat: 혈당 친화도 점수 시스템 추가- scoreCalculator: GI(35%) + 탄수화물(30%) + 식이섬유(20%) + 조합보너스(15%) 공식으로 0~100점 산출- analyzeFood: 이미지 URI → 리사이즈 → Gemini 호출 → 점수까지 원스텝 처리하는 독립 유틸- Gemini 프롬프트 확장: fiber_g, food_types, comment 필드 추가 (API 1회 호출로 통합)- FoodRecord/FoodAnalysisResult 타입에 gi_index, carbs_g, fiber_g, food_types, score, scoreLabel, comment 추가- handleSave(): 분석 결과에서 점수 계산 후 FoodRecord에 저장- BloodSugarScoreBlock: 홈 화면 kcal 아래 혈당 친화 점수 블록 (평균점수, 라벨, AI코멘트, 끼니별 바)
+
+## [2026-05-14 17:32:12]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+작업 요약: feat: 혈당 친화도 점수 시스템 추가- scoreCalculator: GI(35%) + 탄수화물(30%) + 식이섬유(20%) + 조합보너스(15%) 공식으로 0~100점 산출- analyzeFood: 이미지 URI → 리사이즈 → Gemini 호출 → 점수까지 원스텝 처리하는 독립 유틸- Gemini 프롬프트 확장: fiber_g, food_types, comment 필드 추가 (API 1회 호출로 통합)- FoodRecord/FoodAnalysisResult 타입에 gi_index, carbs_g, fiber_g, food_types, score, scoreLabel, comment 추가- handleSave(): 분석 결과에서 점수 계산 후 FoodRecord에 저장- BloodSugarScoreBlock: 홈 화면 kcal 아래 혈당 친화 점수 블록 (평균점수, 라벨, AI코멘트, 끼니별 바)
+
+## [2026-05-14 23:12:28]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+app/analysis.tsx
+작업 요약: feat: 혈당 친화도 점수 시스템 추가- scoreCalculator: GI(35%) + 탄수화물(30%) + 식이섬유(20%) + 조합보너스(15%) 공식으로 0~100점 산출- analyzeFood: 이미지 URI → 리사이즈 → Gemini 호출 → 점수까지 원스텝 처리하는 독립 유틸- Gemini 프롬프트 확장: fiber_g, food_types, comment 필드 추가 (API 1회 호출로 통합)- FoodRecord/FoodAnalysisResult 타입에 gi_index, carbs_g, fiber_g, food_types, score, scoreLabel, comment 추가- handleSave(): 분석 결과에서 점수 계산 후 FoodRecord에 저장- BloodSugarScoreBlock: 홈 화면 kcal 아래 혈당 친화 점수 블록 (평균점수, 라벨, AI코멘트, 끼니별 바)
+
+## [2026-05-14 23:15:14]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+app/analysis.tsx
+작업 요약: feat: 혈당 친화도 점수 시스템 추가- scoreCalculator: GI(35%) + 탄수화물(30%) + 식이섬유(20%) + 조합보너스(15%) 공식으로 0~100점 산출- analyzeFood: 이미지 URI → 리사이즈 → Gemini 호출 → 점수까지 원스텝 처리하는 독립 유틸- Gemini 프롬프트 확장: fiber_g, food_types, comment 필드 추가 (API 1회 호출로 통합)- FoodRecord/FoodAnalysisResult 타입에 gi_index, carbs_g, fiber_g, food_types, score, scoreLabel, comment 추가- handleSave(): 분석 결과에서 점수 계산 후 FoodRecord에 저장- BloodSugarScoreBlock: 홈 화면 kcal 아래 혈당 친화 점수 블록 (평균점수, 라벨, AI코멘트, 끼니별 바)
+
+## [2026-05-14 23:18:24]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/analysis.tsx
+app/guide.tsx
+작업 요약: feat: 혈당 친화도 점수 시스템 추가- scoreCalculator: GI(35%) + 탄수화물(30%) + 식이섬유(20%) + 조합보너스(15%) 공식으로 0~100점 산출- analyzeFood: 이미지 URI → 리사이즈 → Gemini 호출 → 점수까지 원스텝 처리하는 독립 유틸- Gemini 프롬프트 확장: fiber_g, food_types, comment 필드 추가 (API 1회 호출로 통합)- FoodRecord/FoodAnalysisResult 타입에 gi_index, carbs_g, fiber_g, food_types, score, scoreLabel, comment 추가- handleSave(): 분석 결과에서 점수 계산 후 FoodRecord에 저장- BloodSugarScoreBlock: 홈 화면 kcal 아래 혈당 친화 점수 블록 (평균점수, 라벨, AI코멘트, 끼니별 바)
+
+## [2026-05-14 23:26:42]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/analysis.tsx
+app/guide.tsx
+작업 요약: feat: 혈당 친화도 점수 시스템 추가- scoreCalculator: GI(35%) + 탄수화물(30%) + 식이섬유(20%) + 조합보너스(15%) 공식으로 0~100점 산출- analyzeFood: 이미지 URI → 리사이즈 → Gemini 호출 → 점수까지 원스텝 처리하는 독립 유틸- Gemini 프롬프트 확장: fiber_g, food_types, comment 필드 추가 (API 1회 호출로 통합)- FoodRecord/FoodAnalysisResult 타입에 gi_index, carbs_g, fiber_g, food_types, score, scoreLabel, comment 추가- handleSave(): 분석 결과에서 점수 계산 후 FoodRecord에 저장- BloodSugarScoreBlock: 홈 화면 kcal 아래 혈당 친화 점수 블록 (평균점수, 라벨, AI코멘트, 끼니별 바)
+
+## [2026-05-14 23:29:33]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/analysis.tsx
+app/guide.tsx
+작업 요약: feat: 혈당 친화도 점수 시스템 추가- scoreCalculator: GI(35%) + 탄수화물(30%) + 식이섬유(20%) + 조합보너스(15%) 공식으로 0~100점 산출- analyzeFood: 이미지 URI → 리사이즈 → Gemini 호출 → 점수까지 원스텝 처리하는 독립 유틸- Gemini 프롬프트 확장: fiber_g, food_types, comment 필드 추가 (API 1회 호출로 통합)- FoodRecord/FoodAnalysisResult 타입에 gi_index, carbs_g, fiber_g, food_types, score, scoreLabel, comment 추가- handleSave(): 분석 결과에서 점수 계산 후 FoodRecord에 저장- BloodSugarScoreBlock: 홈 화면 kcal 아래 혈당 친화 점수 블록 (평균점수, 라벨, AI코멘트, 끼니별 바)
+
+## [2026-05-14 23:36:24]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+작업 요약: fix: 웹 사진 표시, 가이드 버튼 제거, GO_BACK 안전 처리, 헤더 상단 패딩 통일- 음식 분석 화면: webSource base64 이미지를 decodedUri 및 handleSave()에 반영해 사진이 정상 저장·표시되도록 수정- AI 가이드 받기 버튼 제거 (분석 화면에서 가이드 진입 방식 변경 예정)- router.back() → router.canGoBack() ? router.back() : router.replace('/(tabs)') 패턴으로 GO_BACK 내비게이터 오류 수정 (analysis, history, guide, profile 전 화면)- 식단일기, 식단상세, 기록편집, 계정 Top Bar paddingTop을 SPACING.pt20(20px)으로 통일
+
+## [2026-05-14 23:36:43]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+작업 요약: fix: 웹 사진 표시, 가이드 버튼 제거, GO_BACK 안전 처리, 헤더 상단 패딩 통일- 음식 분석 화면: webSource base64 이미지를 decodedUri 및 handleSave()에 반영해 사진이 정상 저장·표시되도록 수정- AI 가이드 받기 버튼 제거 (분석 화면에서 가이드 진입 방식 변경 예정)- router.back() → router.canGoBack() ? router.back() : router.replace('/(tabs)') 패턴으로 GO_BACK 내비게이터 오류 수정 (analysis, history, guide, profile 전 화면)- 식단일기, 식단상세, 기록편집, 계정 Top Bar paddingTop을 SPACING.pt20(20px)으로 통일
+
+## [2026-05-14 23:39:10]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+작업 요약: fix: 웹 사진 표시, 가이드 버튼 제거, GO_BACK 안전 처리, 헤더 상단 패딩 통일- 음식 분석 화면: webSource base64 이미지를 decodedUri 및 handleSave()에 반영해 사진이 정상 저장·표시되도록 수정- AI 가이드 받기 버튼 제거 (분석 화면에서 가이드 진입 방식 변경 예정)- router.back() → router.canGoBack() ? router.back() : router.replace('/(tabs)') 패턴으로 GO_BACK 내비게이터 오류 수정 (analysis, history, guide, profile 전 화면)- 식단일기, 식단상세, 기록편집, 계정 Top Bar paddingTop을 SPACING.pt20(20px)으로 통일
+
+## [2026-05-14 23:41:03]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+작업 요약: fix: 웹 사진 표시, 가이드 버튼 제거, GO_BACK 안전 처리, 헤더 상단 패딩 통일- 음식 분석 화면: webSource base64 이미지를 decodedUri 및 handleSave()에 반영해 사진이 정상 저장·표시되도록 수정- AI 가이드 받기 버튼 제거 (분석 화면에서 가이드 진입 방식 변경 예정)- router.back() → router.canGoBack() ? router.back() : router.replace('/(tabs)') 패턴으로 GO_BACK 내비게이터 오류 수정 (analysis, history, guide, profile 전 화면)- 식단일기, 식단상세, 기록편집, 계정 Top Bar paddingTop을 SPACING.pt20(20px)으로 통일
+
+## [2026-05-14 23:45:51]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+app/(tabs)/index.tsx
+작업 요약: fix: 웹 사진 표시, 가이드 버튼 제거, GO_BACK 안전 처리, 헤더 상단 패딩 통일- 음식 분석 화면: webSource base64 이미지를 decodedUri 및 handleSave()에 반영해 사진이 정상 저장·표시되도록 수정- AI 가이드 받기 버튼 제거 (분석 화면에서 가이드 진입 방식 변경 예정)- router.back() → router.canGoBack() ? router.back() : router.replace('/(tabs)') 패턴으로 GO_BACK 내비게이터 오류 수정 (analysis, history, guide, profile 전 화면)- 식단일기, 식단상세, 기록편집, 계정 Top Bar paddingTop을 SPACING.pt20(20px)으로 통일
+
+## [2026-05-14 23:50:48]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+app/(tabs)/index.tsx
+작업 요약: fix: 웹 사진 표시, 가이드 버튼 제거, GO_BACK 안전 처리, 헤더 상단 패딩 통일- 음식 분석 화면: webSource base64 이미지를 decodedUri 및 handleSave()에 반영해 사진이 정상 저장·표시되도록 수정- AI 가이드 받기 버튼 제거 (분석 화면에서 가이드 진입 방식 변경 예정)- router.back() → router.canGoBack() ? router.back() : router.replace('/(tabs)') 패턴으로 GO_BACK 내비게이터 오류 수정 (analysis, history, guide, profile 전 화면)- 식단일기, 식단상세, 기록편집, 계정 Top Bar paddingTop을 SPACING.pt20(20px)으로 통일
+
+## [2026-05-14 23:55:03]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+app/(tabs)/index.tsx
+src/components/BloodSugarScoreBlock.tsx
+작업 요약: fix: 웹 사진 표시, 가이드 버튼 제거, GO_BACK 안전 처리, 헤더 상단 패딩 통일- 음식 분석 화면: webSource base64 이미지를 decodedUri 및 handleSave()에 반영해 사진이 정상 저장·표시되도록 수정- AI 가이드 받기 버튼 제거 (분석 화면에서 가이드 진입 방식 변경 예정)- router.back() → router.canGoBack() ? router.back() : router.replace('/(tabs)') 패턴으로 GO_BACK 내비게이터 오류 수정 (analysis, history, guide, profile 전 화면)- 식단일기, 식단상세, 기록편집, 계정 Top Bar paddingTop을 SPACING.pt20(20px)으로 통일
+
+## [2026-05-15 00:01:36]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+app/(tabs)/index.tsx
+src/components/BloodSugarScoreBlock.tsx
+작업 요약: fix: 웹 사진 표시, 가이드 버튼 제거, GO_BACK 안전 처리, 헤더 상단 패딩 통일- 음식 분석 화면: webSource base64 이미지를 decodedUri 및 handleSave()에 반영해 사진이 정상 저장·표시되도록 수정- AI 가이드 받기 버튼 제거 (분석 화면에서 가이드 진입 방식 변경 예정)- router.back() → router.canGoBack() ? router.back() : router.replace('/(tabs)') 패턴으로 GO_BACK 내비게이터 오류 수정 (analysis, history, guide, profile 전 화면)- 식단일기, 식단상세, 기록편집, 계정 Top Bar paddingTop을 SPACING.pt20(20px)으로 통일
+
+## [2026-05-15 00:08:30]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+app/(tabs)/index.tsx
+src/components/BloodSugarScoreBlock.tsx
+작업 요약: fix: 웹 사진 표시, 가이드 버튼 제거, GO_BACK 안전 처리, 헤더 상단 패딩 통일- 음식 분석 화면: webSource base64 이미지를 decodedUri 및 handleSave()에 반영해 사진이 정상 저장·표시되도록 수정- AI 가이드 받기 버튼 제거 (분석 화면에서 가이드 진입 방식 변경 예정)- router.back() → router.canGoBack() ? router.back() : router.replace('/(tabs)') 패턴으로 GO_BACK 내비게이터 오류 수정 (analysis, history, guide, profile 전 화면)- 식단일기, 식단상세, 기록편집, 계정 Top Bar paddingTop을 SPACING.pt20(20px)으로 통일
+
+## [2026-05-15 00:14:46]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+작업 요약: feat: 혈당 친화 점수·칼로리 카드 디자인 강화 및 다음 끼니 제안 추가- 두 카드 가로 폭 width:100% 통일- 공통 디자인: borderRadius 16, 그린 계열 border, shadow 강화- 폰트 사이즈 전반 상향 (점수 32→38px, 목표값 17→20px 등)- 카드 투명도 0.88/0.92→0.72로 배경 투과율 증가- BloodSugarScoreBlock: 다음 끼니 제안 멘트 추가 (점수·미기록 슬롯 기반)- metaRow 좌우 padding 24→12px, metaItem flex:1 정렬 개선
+
+## [2026-05-15 00:16:22]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+작업 요약: feat: 혈당 친화 점수·칼로리 카드 디자인 강화 및 다음 끼니 제안 추가- 두 카드 가로 폭 width:100% 통일- 공통 디자인: borderRadius 16, 그린 계열 border, shadow 강화- 폰트 사이즈 전반 상향 (점수 32→38px, 목표값 17→20px 등)- 카드 투명도 0.88/0.92→0.72로 배경 투과율 증가- BloodSugarScoreBlock: 다음 끼니 제안 멘트 추가 (점수·미기록 슬롯 기반)- metaRow 좌우 padding 24→12px, metaItem flex:1 정렬 개선
+
+## [2026-05-15 00:16:35]
+변경 파일: .claude/memory/decisions.md
+.gitignore
+작업 요약: feat: 혈당 친화 점수·칼로리 카드 디자인 강화 및 다음 끼니 제안 추가- 두 카드 가로 폭 width:100% 통일- 공통 디자인: borderRadius 16, 그린 계열 border, shadow 강화- 폰트 사이즈 전반 상향 (점수 32→38px, 목표값 17→20px 등)- 카드 투명도 0.88/0.92→0.72로 배경 투과율 증가- BloodSugarScoreBlock: 다음 끼니 제안 멘트 추가 (점수·미기록 슬롯 기반)- metaRow 좌우 padding 24→12px, metaItem flex:1 정렬 개선
