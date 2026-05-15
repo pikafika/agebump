@@ -20,6 +20,8 @@ import {
   SQUIRCLE,
   TYPOGRAPHY,
 } from '../src/constants/theme';
+import { analyticsService } from '../src/services/analyticsService';
+import { useAuthStore } from '../src/store/authStore';
 import {
   fetchRecordsByDate,
   persistUpdateRecord,
@@ -78,6 +80,7 @@ export function GuideScreen() {
   const shouldRegenerate = regenerate === '1';
   const { getRecordById, getTodayRecords, updateRecord } = useFoodStore();
 
+  const authUser = useAuthStore((s) => s.user);
   const [contextRecords, setContextRecords] = useState<FoodRecord[] | null>(null);
   const [contextError, setContextError] = useState<string | null>(null);
   const [guide, setGuide]       = useState<AIGuide | null>(null);
@@ -175,10 +178,15 @@ export function GuideScreen() {
     setError(null);
     setErrorDetail(null);
     setHasCachedGuide(false);
+    const startMs = Date.now();
     try {
       const g = await generateGuide(records);
       setGuide(g);
       startTyping(g);
+      analyticsService.trackGuideGenerated(authUser?.uid ?? null, {
+        success: true,
+        duration_ms: Date.now() - startMs,
+      });
     } catch (err) {
       console.error('[guide] generateGuide failed:', err);
       if (err instanceof GeminiApiKeyError) {
@@ -208,6 +216,14 @@ export function GuideScreen() {
         setError('AI 가이드를 생성할 수 없었습니다. 잠시 후 다시 시도해주세요.');
         setErrorDetail(err instanceof Error ? err.message : String(err));
       }
+      analyticsService.trackGuideGenerated(authUser?.uid ?? null, {
+        success: false,
+        duration_ms: Date.now() - startMs,
+      });
+      analyticsService.trackApiError(authUser?.uid ?? null, {
+        service: 'gemini',
+        error_code: err instanceof Error ? err.constructor.name : 'unknown',
+      });
     } finally {
       setLoading(false);
       inFlightRef.current = false;

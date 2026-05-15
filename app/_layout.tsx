@@ -6,7 +6,14 @@ import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { COLORS } from '../src/constants/theme';
-import { migrateLegacyUtcKeys, migrateMemosToSecureStore } from '../src/store/migrations';
+import { analyticsService } from '../src/services/analyticsService';
+import { useAuthStore } from '../src/store/authStore';
+import {
+  migrateLegacyUtcKeys,
+  migrateLocalToFirestore,
+  migrateMemosToSecureStore,
+} from '../src/store/migrations';
+import { useSyncStore } from '../src/store/syncStore';
 import { ONBOARDING_KEY } from './onboarding';
 
 // Web font injection — Baskin Robbins (배스킨라빈스체) via noonnu CDN
@@ -50,6 +57,7 @@ const queryClient = new QueryClient({
 export function RootLayout() {
   const [isReady, setIsReady] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const { user, isInitialized } = useAuthStore();
   // 네이티브: TTF 임베드 로딩. 웹: 아래 @font-face 주입과 병행 (둘 다 동일 family name)
   const [fontsLoaded, fontError] = useFonts({
     BRBA_B: require('../assets/fonts/BRBA_B.otf'),
@@ -58,12 +66,17 @@ export function RootLayout() {
 
   useEffect(() => {
     injectWebFontOnce();
-    // 1회성 데이터 마이그레이션은 부팅과 병렬로 진행 (성공/실패 모두 부팅 차단하지 않음)
+
+    // Firebase 익명 인증 초기화 (부팅과 병렬)
+    const unsubscribeAuth = useAuthStore.getState().initialize();
+
+    // 1회성 로컬 데이터 마이그레이션 (부팅 차단하지 않음)
     // 1) UTC→로컬 키 재그룹핑 → 2) 메모 평문 제거 + secure-store 이전 (순서 중요)
     void (async () => {
       await migrateLegacyUtcKeys();
       await migrateMemosToSecureStore();
     })();
+
     AsyncStorage.getItem(ONBOARDING_KEY)
       .then((value: string | null) => {
         setNeedsOnboarding(!value);
@@ -74,7 +87,19 @@ export function RootLayout() {
       .finally(() => {
         setIsReady(true);
       });
+
+    return unsubscribeAuth;
   }, []);
+
+  // 인증 완료 후 세션 추적 + Firestore 마이그레이션
+  useEffect(() => {
+    if (!isInitialized || !user) return;
+    analyticsService.trackSessionStart(user.uid);
+    const { hasMigrated } = useSyncStore.getState();
+    if (!hasMigrated) {
+      void migrateLocalToFirestore(user.uid);
+    }
+  }, [isInitialized, user]);
 
   useEffect(() => {
     if (fontError) console.warn('[fonts] BR load error:', fontError);

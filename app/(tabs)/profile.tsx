@@ -2,8 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowRight01Icon, Edit02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -24,6 +25,8 @@ import {
   SQUIRCLE,
   TYPOGRAPHY,
 } from '../../src/constants/theme';
+import { analyticsService } from '../../src/services/analyticsService';
+import { useAuthStore } from '../../src/store/authStore';
 import { useFoodStore } from '../../src/store/foodStore';
 import {
   DAILY_CALORIE_GOAL_MAX,
@@ -92,8 +95,21 @@ export function ProfileScreen() {
   const setNickname = useUserProfileStore((s) => s.setNickname);
   const setDailyCalorieGoal = useUserProfileStore((s) => s.setDailyCalorieGoal);
 
+  const { user, isLinking, linkError, linkWithGoogle, clearLinkError } = useAuthStore();
+  const isLinked = !!user && !user.isAnonymous;
+  const linkedEmail = isLinked
+    ? (user.providerData.find((p) => p.providerId === 'google.com')?.email ?? user.email ?? '')
+    : '';
+
   const clearAllRecords = useFoodStore((s) => s.clearAllRecords);
   const todayRecordsLength = useFoodStore((s) => s.records.length);
+
+  // linkError가 설정될 때 Alert으로 표시 (에러가 깜빡 사라지는 것 방지)
+  useEffect(() => {
+    if (linkError) {
+      Alert.alert('구글 연결 실패', linkError, [{ text: '확인', onPress: clearLinkError }]);
+    }
+  }, [linkError, clearLinkError]);
 
   const [editingNickname, setEditingNickname] = useState(false);
   const [nicknameDraft, setNicknameDraft] = useState('');
@@ -192,8 +208,14 @@ export function ProfileScreen() {
   function showPrivacy() {
     Alert.alert(
       '개인정보 처리방침',
-      '식사 기록과 프로필 정보는 단말 내부에만 저장되며 외부 서버로 전송되지 않습니다. AI 분석을 위해 음식 사진은 Google Gemini API로 전송되고, 응답 후 저장되지 않습니다.',
+      '식사 기록과 프로필 정보는 단말 내부 및 Firebase 클라우드에 안전하게 저장됩니다. 구글 계정을 연결하면 다른 기기에서도 데이터에 접근할 수 있습니다. AI 분석을 위해 음식 사진은 Google Gemini API로 전송되고, 응답 후 저장되지 않습니다.',
     );
+  }
+
+  function handleLinkGoogle() {
+    if (isLinked) return;
+    analyticsService.trackAccountLinkStarted(user?.uid ?? null);
+    linkWithGoogle();
   }
 
   return (
@@ -270,6 +292,42 @@ export function ProfileScreen() {
                 trailing="edit"
               />
             )}
+          </Section>
+
+          {/* ── 계정 연결 ── */}
+          <Section title="계정 연결">
+            {isLinked ? (
+              <Row
+                label="구글 계정"
+                value={linkedEmail}
+                trailing="none"
+              />
+            ) : isLinking ? (
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>구글로 연결 중...</Text>
+                <ActivityIndicator size="small" color={COLORS.primary.normal as string} />
+              </View>
+            ) : (
+              <Row
+                label="구글로 연결하기"
+                value="연결 시 기기 간 동기화"
+                onPress={handleLinkGoogle}
+                trailing="chevron"
+              />
+            )}
+            {linkError ? (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.row}>
+                  <Text style={[styles.rowLabel, { color: COLORS.status.negative as string, flex: 1 }]} numberOfLines={2}>
+                    {linkError}
+                  </Text>
+                  <Pressable onPress={clearLinkError} hitSlop={8}>
+                    <Text style={{ color: COLORS.label.assistive as string, fontSize: 12 }}>닫기</Text>
+                  </Pressable>
+                </View>
+              </>
+            ) : null}
           </Section>
 
           {/* ── 설정 ── */}

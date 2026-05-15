@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { upsertProfile } from '../services/profileSyncService';
+import { useAuthStore } from './authStore';
 
 const STORAGE_KEY = 'user-profile';
 
@@ -25,13 +27,26 @@ export const useUserProfileStore = create<UserProfileState>()(
       nickname: '',
       dailyCalorieGoal: DAILY_CALORIE_GOAL_DEFAULT,
 
-      setNickname: (value) => set({ nickname: value.trim() }),
+      setNickname: (value) => {
+        const trimmed = value.trim();
+        set({ nickname: trimmed });
+        const userId = useAuthStore.getState().user?.uid;
+        const { dailyCalorieGoal } = useUserProfileStore.getState();
+        if (userId) {
+          upsertProfile(userId, { nickname: trimmed, dailyCalorieGoal }).catch(() => {});
+        }
+      },
       setDailyCalorieGoal: (value) => {
         const clamped = Math.min(
           Math.max(Math.round(value), DAILY_CALORIE_GOAL_MIN),
           DAILY_CALORIE_GOAL_MAX,
         );
         set({ dailyCalorieGoal: clamped });
+        const userId = useAuthStore.getState().user?.uid;
+        const { nickname } = useUserProfileStore.getState();
+        if (userId) {
+          upsertProfile(userId, { nickname, dailyCalorieGoal: clamped }).catch(() => {});
+        }
       },
       reset: () =>
         set({ nickname: '', dailyCalorieGoal: DAILY_CALORIE_GOAL_DEFAULT }),

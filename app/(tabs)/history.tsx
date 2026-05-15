@@ -27,6 +27,8 @@ import {
   persistDeleteRecord,
   useFoodStore,
 } from '../../src/store/foodStore';
+import { analyticsService } from '../../src/services/analyticsService';
+import { useAuthStore } from '../../src/store/authStore';
 import { type FoodRecord, type MealType } from '../../src/types/food';
 import {
   WEEKDAY_INITIALS_EN,
@@ -195,6 +197,7 @@ export function HistoryScreen() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<FoodRecord | null>(null);
 
+  const authUser = useAuthStore((s) => s.user);
   const todayRecords = useFoodStore((s) => s.records);
   const deleteRecord = useFoodStore((s) => s.deleteRecord);
 
@@ -293,8 +296,9 @@ export function HistoryScreen() {
       setPastRecords((prev) => prev.filter((r) => r.id !== pendingDelete.id));
       persistDeleteRecord(pendingDelete.id, pendingDelete.timestamp);
     }
+    analyticsService.trackRecordDeleted(authUser?.uid ?? null);
     setPendingDelete(null);
-  }, [pendingDelete, isToday, deleteRecord]);
+  }, [pendingDelete, isToday, deleteRecord, authUser]);
 
   // 수정 모드 삭제: 커스텀 확인 모달 표시
   const handleDeleteInEditMode = useCallback(

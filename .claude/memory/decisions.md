@@ -1098,3 +1098,470 @@ src/components/BloodSugarScoreBlock.tsx
 변경 파일: .claude/memory/decisions.md
 .gitignore
 작업 요약: feat: 혈당 친화 점수·칼로리 카드 디자인 강화 및 다음 끼니 제안 추가- 두 카드 가로 폭 width:100% 통일- 공통 디자인: borderRadius 16, 그린 계열 border, shadow 강화- 폰트 사이즈 전반 상향 (점수 32→38px, 목표값 17→20px 등)- 카드 투명도 0.88/0.92→0.72로 배경 투과율 증가- BloodSugarScoreBlock: 다음 끼니 제안 멘트 추가 (점수·미기록 슬롯 기반)- metaRow 좌우 padding 24→12px, metaItem flex:1 정렬 개선
+
+## [2026-05-15 11:43:29]
+변경 파일: (변경 파일 없음)
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 11:54:51]
+변경 파일: .claude/memory/decisions.md
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 14:44:04]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 14:52:49]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 16:27:38]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 16:44:09]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 16:45:33]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 16:46:15]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 16:47:16]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 16:49:34]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 16:53:23]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 16:55:10]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 16:58:56]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 17:13:25]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 17:34:56]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 17:43:17]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 18:36:08]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 18:45:09]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 18:51:02]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 18:54:49]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 18:59:36]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:01:12]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:03:23]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:12:56]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:14:18]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:17:38]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:20:16]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:23:44]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:28:31]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:31:43]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:34:04]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 19:51:28]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 21:13:20]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트
+
+## [2026-05-15 21:15:05]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+app/_layout.tsx
+app/analysis.tsx
+app/guide.tsx
+metro.config.js
+package-lock.json
+package.json
+src/store/foodStore.ts
+src/store/migrations.ts
+src/store/userProfileStore.ts
+작업 요약: chore: .vercel gitignore 추가 및 decisions 메모리 업데이트

@@ -29,6 +29,8 @@ import {
   SQUIRCLE,
   TYPOGRAPHY,
 } from '../src/constants/theme';
+import { analyticsService } from '../src/services/analyticsService';
+import { useAuthStore } from '../src/store/authStore';
 import { useFoodStore } from '../src/store/foodStore';
 import { getMemo, setMemo as persistMemo } from '../src/store/memoStore';
 import { type FoodAnalysisResult, type FoodItem, type FoodRecord, type FoodTypeCategory, type MealType } from '../src/types/food';
@@ -191,6 +193,7 @@ export function AnalysisScreen() {
     recordId?: string;
   }>();
   const { addRecord, setIsAnalyzing, getRecordById } = useFoodStore();
+  const authUser = useAuthStore((s) => s.user);
   const isViewingSaved = Boolean(recordId);
 
   const [result, setResult] = useState<FoodAnalysisResult | null>(null);
@@ -220,6 +223,7 @@ export function AnalysisScreen() {
     setErrorDetail(null);
     setIsNetworkError(false);
     setIsAnalyzing(true);
+    const startMs = Date.now();
     try {
       let res: FoodAnalysisResult;
       if (recordId) {
@@ -257,8 +261,22 @@ export function AnalysisScreen() {
       if (res.error) {
         setErrorMessage(res.error);
         setIsNetworkError(false);
+        if (!recordId) {
+          analyticsService.trackFoodAnalyzed(authUser?.uid ?? null, {
+            method: imageUri || webSource ? 'image' : 'text',
+            success: false,
+            duration_ms: Date.now() - startMs,
+          });
+        }
       } else {
         setResult(res);
+        if (!recordId) {
+          analyticsService.trackFoodAnalyzed(authUser?.uid ?? null, {
+            method: imageUri || webSource ? 'image' : 'text',
+            success: true,
+            duration_ms: Date.now() - startMs,
+          });
+        }
       }
     } catch (err) {
       console.error('[analysis] runAnalysis failed:', err);
@@ -266,6 +284,17 @@ export function AnalysisScreen() {
       setIsNetworkError(isNetwork);
       setErrorMessage(message);
       setErrorDetail(detail);
+      if (!recordId) {
+        analyticsService.trackFoodAnalyzed(authUser?.uid ?? null, {
+          method: imageUri || webSource ? 'image' : 'text',
+          success: false,
+          duration_ms: Date.now() - startMs,
+        });
+        analyticsService.trackApiError(authUser?.uid ?? null, {
+          service: 'gemini',
+          error_code: err instanceof Error ? err.constructor.name : 'unknown',
+        });
+      }
     } finally {
       setIsLoading(false);
       setIsAnalyzing(false);
@@ -340,6 +369,11 @@ export function AnalysisScreen() {
       comment: result.comment,
     };
     addRecord(record);
+    analyticsService.trackRecordSaved(authUser?.uid ?? null, {
+      meal_type: mealType,
+      food_count: result.foods.length,
+      has_image: !!(imageUri || webSource),
+    });
     // 메모는 별도 secure-store에 저장 (record envelope에는 평문으로 남기지 않음)
     if (memo.trim().length > 0) {
       await persistMemo(newId, memo);

@@ -3,6 +3,8 @@ import { type FoodRecord } from '../types/food';
 import { toDateString } from '../utils/dateUtils';
 import { STORAGE_KEY_PREFIX } from './foodStore';
 import { setMemo } from './memoStore';
+import { migrateLocalToFirestore as migrateLocalToFirestoreService } from '../services/foodSyncService';
+import { useSyncStore } from './syncStore';
 
 const MIGRATION_FLAG_KEY = 'agebump.migration.utcKeysToLocal.v1';
 const MEMO_MIGRATION_FLAG_KEY = 'agebump.migration.memosToSecureStore.v1';
@@ -140,5 +142,20 @@ export async function migrateMemosToSecureStore(): Promise<void> {
     await AsyncStorage.setItem(MEMO_MIGRATION_FLAG_KEY, '1');
   } catch (err) {
     console.warn('[migrations] migrateMemosToSecureStore failed:', err);
+  }
+}
+
+/**
+ * 로컬 AsyncStorage의 모든 식사 기록을 Firestore로 1회 마이그레이션한다.
+ * syncStore.hasMigrated 플래그로 중복 실행을 방지한다.
+ */
+export async function migrateLocalToFirestore(userId: string): Promise<void> {
+  const syncStore = useSyncStore.getState();
+  if (syncStore.hasMigrated) return;
+  try {
+    await migrateLocalToFirestoreService(userId);
+    syncStore.setHasMigrated();
+  } catch (err) {
+    console.warn('[migrations] migrateLocalToFirestore failed:', err);
   }
 }

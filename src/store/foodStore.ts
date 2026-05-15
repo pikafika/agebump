@@ -3,6 +3,9 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { type FoodRecord, type GlycemicLevel, type MealType } from '../types/food';
 import { toDateString, todayString } from '../utils/dateUtils';
+import { deleteRemoteRecord, upsertRecord } from '../services/foodSyncService';
+import { useAuthStore } from './authStore';
+import { useSyncStore } from './syncStore';
 
 // 'food-records-YYYY-MM-DD' (로컬 날짜) 형식으로 AsyncStorage에 저장한다.
 // 과거에는 toISOString() 기반 UTC 키를 잘못 사용해 KST 자정~09시 기록이
@@ -64,20 +67,42 @@ export const useFoodStore = create<FoodState>()(
       records: [],
       isAnalyzing: false,
 
-      addRecord: (record) =>
-        set((state) => ({ records: [...state.records, record] })),
+      addRecord: (record) => {
+        set((state) => ({ records: [...state.records, record] }));
+        const userId = useAuthStore.getState().user?.uid;
+        if (userId) {
+          upsertRecord(userId, record).catch(() => {
+            useSyncStore.getState().markPending(record.id);
+          });
+        }
+      },
 
-      updateRecord: (id, updates) =>
+      updateRecord: (id, updates) => {
         set((state) => ({
           records: state.records.map((r) =>
             r.id === id ? { ...r, ...updates } : r,
           ),
-        })),
+        }));
+        const userId = useAuthStore.getState().user?.uid;
+        if (userId) {
+          const updated = useFoodStore.getState().records.find((r) => r.id === id);
+          if (updated) {
+            upsertRecord(userId, { ...updated, ...updates }).catch(() => {
+              useSyncStore.getState().markPending(id);
+            });
+          }
+        }
+      },
 
-      deleteRecord: (id) =>
+      deleteRecord: (id) => {
         set((state) => ({
           records: state.records.filter((r) => r.id !== id),
-        })),
+        }));
+        const userId = useAuthStore.getState().user?.uid;
+        if (userId) {
+          deleteRemoteRecord(userId, id).catch(() => {});
+        }
+      },
 
       getRecordsByDate: (date) =>
         get().records.filter((r) => toDateString(r.timestamp) === date),
@@ -109,6 +134,7 @@ export const useFoodStore = create<FoodState>()(
       getRecordById: (id) => get().records.find((r) => r.id === id),
 
       clearAllRecords: async () => {
+        const userId = useAuthStore.getState().user?.uid;
         try {
           const keys = await AsyncStorage.getAllKeys();
           const targets = keys.filter((k) => k.startsWith(STORAGE_KEY_PREFIX));
@@ -119,6 +145,12 @@ export const useFoodStore = create<FoodState>()(
           // 영속화 삭제 실패는 무시 — 인메모리 상태만이라도 비움
         }
         set({ records: [] });
+        // Firestore 삭제는 Cloud Functions 또는 별도 배치 처리로 진행
+        // 현재는 로컬만 삭제 (개인 데이터이므로 서버 기록은 유지)
+        if (userId) {
+          // no-op: 서버 기록은 계정 탈퇴 시 일괄 삭제
+          void userId;
+        }
       },
 
       setIsAnalyzing: (value) => set({ isAnalyzing: value }),
