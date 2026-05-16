@@ -3,8 +3,9 @@ import { type FoodRecord } from '../types/food';
 import { toDateString } from '../utils/dateUtils';
 import { STORAGE_KEY_PREFIX } from './foodStore';
 import { setMemo } from './memoStore';
-import { migrateLocalToFirestore as migrateLocalToFirestoreService } from '../services/foodSyncService';
+import { migrateLocalToFirestore as migrateLocalToFirestoreService, restoreFromFirestore } from '../services/foodSyncService';
 import { useSyncStore } from './syncStore';
+import { useFoodStore } from './foodStore';
 
 const MIGRATION_FLAG_KEY = 'agebump.migration.utcKeysToLocal.v1';
 const MEMO_MIGRATION_FLAG_KEY = 'agebump.migration.memosToSecureStore.v1';
@@ -157,5 +158,57 @@ export async function migrateLocalToFirestore(userId: string): Promise<void> {
     syncStore.setHasMigrated();
   } catch (err) {
     console.warn('[migrations] migrateLocalToFirestore failed:', err);
+  }
+}
+
+/**
+ * Firestore에서 해당 userId의 식사 기록을 로컬 AsyncStorage로 복원한다.
+ * 로컬에 없는 기록만 추가(additive merge)하므로 기존 로컬 데이터는 보존된다.
+ * syncStore.restoredUid로 중복 실행을 방지하며, 계정 전환 시 재실행된다.
+ */
+export async function restoreLocalFromFirestore(userId: string): Promise<void> {
+  const syncStore = useSyncStore.getState();
+  if (syncStore.restoredUid === userId) return;
+  try {
+    const remoteRecords = await restoreFromFirestore(userId);
+    if (remoteRecords.length === 0) {
+      syncStore.setRestoredUid(userId);
+      return;
+    }
+
+    // 날짜별 그룹핑
+    const byDate = new Map<string, FoodRecord[]>();
+    for (const record of remoteRecords) {
+      const date = toDateString(record.timestamp);
+      const bucket = byDate.get(date) ?? [];
+      bucket.push(record);
+      byDate.set(date, bucket);
+    }
+
+    // 날짜별로 로컬 데이터와 additive merge
+    for (const [date, serverRecords] of byDate) {
+      const key = `${STORAGE_KEY_PREFIX}${date}`;
+      const existing = await (async () => {
+        try {
+          const raw = await AsyncStorage.getItem(key);
+          if (!raw) return [] as FoodRecord[];
+          const parsed = JSON.parse(raw) as { state?: { records?: FoodRecord[] } };
+          return parsed.state?.records ?? [];
+        } catch {
+          return [] as FoodRecord[];
+        }
+      })();
+      const existingIds = new Set(existing.map((r) => r.id));
+      const toAdd = serverRecords.filter((r) => !existingIds.has(r.id));
+      if (toAdd.length === 0) continue;
+      const merged = [...existing, ...toAdd].sort((a, b) => a.timestamp - b.timestamp);
+      await AsyncStorage.setItem(key, JSON.stringify({ state: { records: merged } }));
+    }
+
+    syncStore.setRestoredUid(userId);
+    // 오늘 날짜가 포함된 경우 인메모리 스토어 재수화
+    await useFoodStore.persist.rehydrate();
+  } catch (err) {
+    console.warn('[migrations] restoreLocalFromFirestore failed:', err);
   }
 }

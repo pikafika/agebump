@@ -12,6 +12,7 @@ import {
   migrateLegacyUtcKeys,
   migrateLocalToFirestore,
   migrateMemosToSecureStore,
+  restoreLocalFromFirestore,
 } from '../src/store/migrations';
 import { useSyncStore } from '../src/store/syncStore';
 import { ONBOARDING_KEY } from './onboarding';
@@ -91,13 +92,18 @@ export function RootLayout() {
     return unsubscribeAuth;
   }, []);
 
-  // 인증 완료 후 세션 추적 + Firestore 마이그레이션
+  // 인증 완료 후 세션 추적 + Firestore 마이그레이션 + 원격 복원
   useEffect(() => {
     if (!isInitialized || !user) return;
     analyticsService.trackSessionStart(user.uid);
     const { hasMigrated } = useSyncStore.getState();
     if (!hasMigrated) {
       void migrateLocalToFirestore(user.uid);
+    }
+    // 구글 계정이 연동된 경우에만 Firestore → 로컬 복원 (익명 계정은 기기 간 공유 불가)
+    const isGoogleLinked = user.providerData.some((p) => p.providerId === 'google.com');
+    if (isGoogleLinked) {
+      void restoreLocalFromFirestore(user.uid);
     }
   }, [isInitialized, user]);
 

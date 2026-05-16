@@ -37,6 +37,7 @@ import {
   firstWeekdayOffset,
   formatMonthLabelKO,
   formatTimeAMPM,
+  toDateString,
   todayString,
   weekContaining,
 } from '../../src/utils/dateUtils';
@@ -450,7 +451,7 @@ export function HistoryScreen() {
             key={record.id}
             record={record}
             isEditMode={isEditMode}
-            onPress={() => router.push(`/analysis?recordId=${record.id}`)}
+            onPress={() => router.push(`/analysis?recordId=${record.id}&recordDate=${toDateString(record.timestamp)}`)}
             onLongPress={isToday && !isEditMode ? () => handleDelete(record.id) : undefined}
             onDelete={() => handleDeleteInEditMode(record)}
           />

@@ -31,8 +31,9 @@ import {
 } from '../src/constants/theme';
 import { analyticsService } from '../src/services/analyticsService';
 import { useAuthStore } from '../src/store/authStore';
-import { useFoodStore } from '../src/store/foodStore';
+import { fetchRecordsByDate, useFoodStore } from '../src/store/foodStore';
 import { getMemo, setMemo as persistMemo } from '../src/store/memoStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useUserProfileStore } from '../src/store/userProfileStore';
 import { type FoodAnalysisResult, type FoodItem, type FoodRecord, type FoodTypeCategory, type MealType } from '../src/types/food';
 import { clearPendingBase64, clearPendingImageUri, getPendingBase64, getPendingImageUri } from '../src/store/pendingImageStore';
@@ -188,19 +189,20 @@ function levelFromGi(gi: number): FoodAnalysisResult['overallGiLevel'] {
 }
 
 export function AnalysisScreen() {
-  const { imageUri, foodName, recordId } = useLocalSearchParams<{
+  const { imageUri, foodName, recordId, recordDate } = useLocalSearchParams<{
     imageUri?: string;
     foodName?: string;
     recordId?: string;
+    recordDate?: string;
   }>();
   const { addRecord, setIsAnalyzing, getRecordById } = useFoodStore();
   const authUser = useAuthStore((s) => s.user);
-  const userProfile = useUserProfileStore((s) => ({
+  const userProfile = useUserProfileStore(useShallow((s) => ({
     age: s.age,
     gender: s.gender,
     height: s.height,
     weight: s.weight,
-  }));
+  })));
   const isViewingSaved = Boolean(recordId);
 
   const [result, setResult] = useState<FoodAnalysisResult | null>(null);
@@ -234,7 +236,11 @@ export function AnalysisScreen() {
     try {
       let res: FoodAnalysisResult;
       if (recordId) {
-        const saved = getRecordById(recordId);
+        let saved = getRecordById(recordId);
+        if (!saved && recordDate) {
+          const dateRecords = await fetchRecordsByDate(recordDate);
+          saved = dateRecords.find((r) => r.id === recordId);
+        }
         if (!saved) throw new Error('기록을 찾을 수 없습니다.');
         const totalCalories = saved.foods.reduce((s, f) => s + f.calories, 0);
         const avgGi = saved.foods.length > 0

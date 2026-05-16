@@ -1,14 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Timestamp,
+  collection,
   deleteDoc,
   doc,
+  getDocs,
+  query,
   serverTimestamp,
   setDoc,
+  where,
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { FoodRecord } from '../types/food';
+import { type AIGuide, type FoodItem, type FoodRecord, type FoodTypeCategory, type MealType, type ScoreLabel } from '../types/food';
 import { STORAGE_KEY_PREFIX } from '../store/foodStore';
 
 /** FoodRecord → Firestore 도큐먼트 변환 (imageUri 제외) */
@@ -77,4 +81,39 @@ export async function migrateLocalToFirestore(userId: string): Promise<void> {
     }
     await batch.commit();
   }
+}
+
+/**
+ * Firestore에서 userId에 속한 모든 식사 기록을 가져온다.
+ * 다른 기기에서 저장한 데이터를 로컬로 복원할 때 사용한다.
+ */
+export async function restoreFromFirestore(userId: string): Promise<FoodRecord[]> {
+  const q = query(
+    collection(db, 'food_records'),
+    where('userId', '==', userId),
+  );
+  const snap = await getDocs(q);
+
+  return snap.docs
+    .map((d) => {
+      const data = d.data();
+      const id = d.id.slice(userId.length + 1);
+      if (!id || typeof data['timestampMs'] !== 'number') return null;
+      const record: FoodRecord = {
+        id,
+        timestamp: data['timestampMs'] as number,
+        mealType: data['mealType'] as MealType,
+        foods: (data['foods'] ?? []) as FoodItem[],
+      };
+      if (data['giIndex'] != null) record.gi_index = data['giIndex'] as number;
+      if (data['carbsG'] != null) record.carbs_g = data['carbsG'] as number;
+      if (data['fiberG'] != null) record.fiber_g = data['fiberG'] as number;
+      if (data['foodTypes'] != null) record.food_types = data['foodTypes'] as FoodTypeCategory[];
+      if (data['score'] != null) record.score = data['score'] as number;
+      if (data['scoreLabel'] != null) record.scoreLabel = data['scoreLabel'] as ScoreLabel;
+      if (data['comment'] != null) record.comment = data['comment'] as string;
+      if (data['aiGuide'] != null) record.aiGuide = data['aiGuide'] as AIGuide;
+      return record;
+    })
+    .filter((r): r is FoodRecord => r !== null);
 }

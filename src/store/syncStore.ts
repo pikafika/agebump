@@ -5,10 +5,13 @@ import { create } from 'zustand';
 interface SyncState {
   pendingSyncIds: string[];
   hasMigrated: boolean;
+  /** 마지막으로 Firestore 복원을 완료한 userId. 계정 전환 시 재복원 트리거용. */
+  restoredUid: string | null;
 
   markPending: (id: string) => void;
   markSynced: (id: string) => void;
   setHasMigrated: () => void;
+  setRestoredUid: (uid: string) => void;
 }
 
 export const useSyncStore = create<SyncState>()(
@@ -16,6 +19,7 @@ export const useSyncStore = create<SyncState>()(
     (set) => ({
       pendingSyncIds: [],
       hasMigrated: false,
+      restoredUid: null,
 
       markPending: (id) =>
         set((s) => ({
@@ -30,6 +34,7 @@ export const useSyncStore = create<SyncState>()(
         })),
 
       setHasMigrated: () => set({ hasMigrated: true }),
+      setRestoredUid: (uid) => set({ restoredUid: uid }),
     }),
     {
       name: 'agebump-sync-state',
