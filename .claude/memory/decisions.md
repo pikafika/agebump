@@ -1609,3 +1609,81 @@ src/types/food.ts
 src/utils/analyzeFood.ts
 src/utils/scoreCalculator.ts
 작업 요약: feat: Firebase 익명 인증 + 구글 계정 연결 + 서비스 분석 수집- firebase JS SDK 설치, src/lib/firebase.ts 초기화 (Auth + Firestore)- 익명 로그인 자동 실행 + linkWithPopup 구글 연결  - credential-already-in-use 처리: 기존 계정으로 signInWithCredential 재시도- Firestore 동기화: food_records / user_profiles 컬렉션 (imageUri 제외)- syncStore: pendingSyncIds 추적, 로컬 우선 저장 후 Firestore 사이드이펙트- analyticsService: fire-and-forget 이벤트 수집 (food_analyzed, record_saved 등)- metro.config.js: COOP 헤더 unsafe-none 강제 (Firebase popup 팝업 지원)- profile.tsx: 구글 계정 연결 섹션 UI (미연결 / 연결 중 / 연결 완료)
+
+## [2026-05-16 00:20:57]
+변경 파일: (변경 파일 없음)
+작업 요약: feat: 신체 정보 기반 혈당 점수 개인화 + 구글 연결 해제- 나이·성별·키·몸무게 선택적 입력 UI (계정 페이지)- BMI + 나이 기반으로 calculateScore() 임계값 개인화- 개인화 적용 시 홈 혈당 점수 카드에 "★ 내 신체 기준" 뱃지 표시- Gemini 프롬프트에 신체 맥락 조건부 삽입- 구글 계정 연결 해제 기능 (authStore.unlinkGoogle)
+
+## [2026-05-16 00:26:23]
+변경 파일: .claude/memory/decisions.md
+작업 요약: feat: 신체 정보 기반 혈당 점수 개인화 + 구글 연결 해제- 나이·성별·키·몸무게 선택적 입력 UI (계정 페이지)- BMI + 나이 기반으로 calculateScore() 임계값 개인화- 개인화 적용 시 홈 혈당 점수 카드에 "★ 내 신체 기준" 뱃지 표시- Gemini 프롬프트에 신체 맥락 조건부 삽입- 구글 계정 연결 해제 기능 (authStore.unlinkGoogle)
+
+## [2026-05-16 00:27:45]
+변경 파일: .claude/memory/decisions.md
+작업 요약: feat: 신체 정보 기반 혈당 점수 개인화 + 구글 연결 해제- 나이·성별·키·몸무게 선택적 입력 UI (계정 페이지)- BMI + 나이 기반으로 calculateScore() 임계값 개인화- 개인화 적용 시 홈 혈당 점수 카드에 "★ 내 신체 기준" 뱃지 표시- Gemini 프롬프트에 신체 맥락 조건부 삽입- 구글 계정 연결 해제 기능 (authStore.unlinkGoogle)
+
+## [2026-05-16 00:29:26]
+변경 파일: .claude/memory/decisions.md
+작업 요약: feat: 신체 정보 기반 혈당 점수 개인화 + 구글 연결 해제- 나이·성별·키·몸무게 선택적 입력 UI (계정 페이지)- BMI + 나이 기반으로 calculateScore() 임계값 개인화- 개인화 적용 시 홈 혈당 점수 카드에 "★ 내 신체 기준" 뱃지 표시- Gemini 프롬프트에 신체 맥락 조건부 삽입- 구글 계정 연결 해제 기능 (authStore.unlinkGoogle)
+
+## [2026-05-16 14:31:34]
+변경 파일: .claude/memory/decisions.md
+.claude/memory/project_session_20260508.md
+작업 요약: feat: 신체 정보 기반 혈당 점수 개인화 + 구글 연결 해제- 나이·성별·키·몸무게 선택적 입력 UI (계정 페이지)- BMI + 나이 기반으로 calculateScore() 임계값 개인화- 개인화 적용 시 홈 혈당 점수 카드에 "★ 내 신체 기준" 뱃지 표시- Gemini 프롬프트에 신체 맥락 조건부 삽입- 구글 계정 연결 해제 기능 (authStore.unlinkGoogle)
+
+## [2026-05-16 14:44:57]
+변경 파일: .claude/memory/decisions.md
+.claude/memory/project_session_20260508.md
+app/(tabs)/history.tsx
+app/analysis.tsx
+작업 요약: feat: 신체 정보 기반 혈당 점수 개인화 + 구글 연결 해제- 나이·성별·키·몸무게 선택적 입력 UI (계정 페이지)- BMI + 나이 기반으로 calculateScore() 임계값 개인화- 개인화 적용 시 홈 혈당 점수 카드에 "★ 내 신체 기준" 뱃지 표시- Gemini 프롬프트에 신체 맥락 조건부 삽입- 구글 계정 연결 해제 기능 (authStore.unlinkGoogle)
+
+## [2026-05-16 15:34:29]
+변경 파일: .claude/memory/decisions.md
+.claude/memory/project_session_20260508.md
+app/(tabs)/history.tsx
+app/analysis.tsx
+작업 요약: feat: 신체 정보 기반 혈당 점수 개인화 + 구글 연결 해제- 나이·성별·키·몸무게 선택적 입력 UI (계정 페이지)- BMI + 나이 기반으로 calculateScore() 임계값 개인화- 개인화 적용 시 홈 혈당 점수 카드에 "★ 내 신체 기준" 뱃지 표시- Gemini 프롬프트에 신체 맥락 조건부 삽입- 구글 계정 연결 해제 기능 (authStore.unlinkGoogle)
+
+## [2026-05-16 15:43:27]
+변경 파일: .claude/memory/decisions.md
+.claude/memory/project_session_20260508.md
+app/(tabs)/history.tsx
+app/_layout.tsx
+app/analysis.tsx
+src/services/foodSyncService.ts
+src/store/migrations.ts
+src/store/syncStore.ts
+작업 요약: feat: 신체 정보 기반 혈당 점수 개인화 + 구글 연결 해제- 나이·성별·키·몸무게 선택적 입력 UI (계정 페이지)- BMI + 나이 기반으로 calculateScore() 임계값 개인화- 개인화 적용 시 홈 혈당 점수 카드에 "★ 내 신체 기준" 뱃지 표시- Gemini 프롬프트에 신체 맥락 조건부 삽입- 구글 계정 연결 해제 기능 (authStore.unlinkGoogle)
+
+## [2026-05-16 15:54:04]
+변경 파일: .claude/memory/decisions.md
+.claude/memory/project_session_20260508.md
+app/(tabs)/history.tsx
+app/_layout.tsx
+app/analysis.tsx
+src/services/foodSyncService.ts
+src/store/migrations.ts
+src/store/syncStore.ts
+작업 요약: feat: 신체 정보 기반 혈당 점수 개인화 + 구글 연결 해제- 나이·성별·키·몸무게 선택적 입력 UI (계정 페이지)- BMI + 나이 기반으로 calculateScore() 임계값 개인화- 개인화 적용 시 홈 혈당 점수 카드에 "★ 내 신체 기준" 뱃지 표시- Gemini 프롬프트에 신체 맥락 조건부 삽입- 구글 계정 연결 해제 기능 (authStore.unlinkGoogle)
+
+## [2026-05-16 15:57:09]
+변경 파일: .claude/memory/decisions.md
+.claude/memory/project_session_20260508.md
+app/(tabs)/history.tsx
+app/_layout.tsx
+app/analysis.tsx
+src/services/foodSyncService.ts
+src/store/migrations.ts
+src/store/syncStore.ts
+작업 요약: feat: 신체 정보 기반 혈당 점수 개인화 + 구글 연결 해제- 나이·성별·키·몸무게 선택적 입력 UI (계정 페이지)- BMI + 나이 기반으로 calculateScore() 임계값 개인화- 개인화 적용 시 홈 혈당 점수 카드에 "★ 내 신체 기준" 뱃지 표시- Gemini 프롬프트에 신체 맥락 조건부 삽입- 구글 계정 연결 해제 기능 (authStore.unlinkGoogle)
+
+## [2026-05-16 16:25:56]
+변경 파일: .claude/memory/decisions.md
+.claude/memory/project_session_20260508.md
+작업 요약: feat: history 기록 조회 버그 수정 + 구글 계정 기기 간 동기화 복원- analysis.tsx: useShallow로 무한 리렌더 루프 수정- history.tsx: recordDate 파라미터 전달로 과거 기록 조회 수정- foodSyncService: restoreFromFirestore 추가 (Firestore → 로컬 pull)- syncStore: restoredUid 플래그 추가 (계정 전환 시 재복원 지원)- migrations: restoreLocalFromFirestore 추가 (additive merge)- _layout: 구글 연동 계정 로그인 시 Firestore 복원 자동 실행
+
+## [2026-05-16 16:27:59]
+변경 파일: .claude/memory/decisions.md
+.claude/memory/project_session_20260508.md
+작업 요약: feat: history 기록 조회 버그 수정 + 구글 계정 기기 간 동기화 복원- analysis.tsx: useShallow로 무한 리렌더 루프 수정- history.tsx: recordDate 파라미터 전달로 과거 기록 조회 수정- foodSyncService: restoreFromFirestore 추가 (Firestore → 로컬 pull)- syncStore: restoredUid 플래그 추가 (계정 전환 시 재복원 지원)- migrations: restoreLocalFromFirestore 추가 (additive merge)- _layout: 구글 연동 계정 로그인 시 Firestore 복원 자동 실행

@@ -1,6 +1,6 @@
 ---
 name: 2026-05-08 세션 기록
-description: PC 웹 미리보기 환경 구축 + zustand v5 import.meta 에러 해결 + Opus 4.7 디폴트 모델 고정
+description: PC 웹 미리보기 환경 구축 + zustand v5 import.meta 에러 해결 + 모델 설정 변경 이력(Opus 4.7 → Sonnet 4.6)
 type: project
 ---
 
@@ -36,10 +36,9 @@ module.exports = config;
 
 **부수 효과:** ios/android는 이미 `react-native` condition으로 CJS를 쓰고 있어 영향 없음. 다른 ESM-only 패키지를 도입하려 할 때만 재고 필요.
 
-## 3. Opus 4.7 디폴트 모델 고정
+## 3. 디폴트 모델 설정 이력
 
-**왜:** 매 세션마다 `/model`로 수동 변경하지 않도록.
+- 2026-05-08: `"model": "claude-opus-4-7"` 로 최초 고정
+- 2026-05-16: `"model": "claude-sonnet-4-6"` 로 변경 (사용자 요청)
 
-**변경:** `/Users/mozzierose/.claude/settings.json:323`
-- `"model": "opus"` → `"model": "claude-opus-4-7"`
-- 별칭 대신 명시 ID로 설정 → Opus 5 출시 후에도 4.7 유지.
+**설정 위치:** `/Users/mozzierose/.claude/settings.json` (최상단 `"model"` 키)
