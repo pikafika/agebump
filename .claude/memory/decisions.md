@@ -1687,3 +1687,74 @@ src/store/syncStore.ts
 변경 파일: .claude/memory/decisions.md
 .claude/memory/project_session_20260508.md
 작업 요약: feat: history 기록 조회 버그 수정 + 구글 계정 기기 간 동기화 복원- analysis.tsx: useShallow로 무한 리렌더 루프 수정- history.tsx: recordDate 파라미터 전달로 과거 기록 조회 수정- foodSyncService: restoreFromFirestore 추가 (Firestore → 로컬 pull)- syncStore: restoredUid 플래그 추가 (계정 전환 시 재복원 지원)- migrations: restoreLocalFromFirestore 추가 (additive merge)- _layout: 구글 연동 계정 로그인 시 Firestore 복원 자동 실행
+
+## [2026-05-16 22:54:05]
+변경 파일: (변경 파일 없음)
+작업 요약: chore: decisions 및 세션 메모리 업데이트
+
+## [2026-05-16 23:00:18]
+변경 파일: .claude/memory/decisions.md
+src/components/BloodSugarScoreBlock.tsx
+작업 요약: chore: decisions 및 세션 메모리 업데이트
+
+## [2026-05-16 23:59:19]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/profile.tsx
+src/components/BloodSugarScoreBlock.tsx
+작업 요약: chore: decisions 및 세션 메모리 업데이트
+
+## [2026-05-17 00:03:14]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+app/analysis.tsx
+src/components/BloodSugarScoreBlock.tsx
+작업 요약: chore: decisions 및 세션 메모리 업데이트
+
+## [2026-05-17 00:10:00]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+app/analysis.tsx
+src/components/BloodSugarScoreBlock.tsx
+src/store/authStore.ts
+작업 요약: chore: decisions 및 세션 메모리 업데이트
+
+## [2026-05-17 00:18:32]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+app/analysis.tsx
+src/components/BloodSugarScoreBlock.tsx
+src/store/authStore.ts
+작업 요약: chore: decisions 및 세션 메모리 업데이트
+
+## [2026-05-17 00:21:09]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+app/analysis.tsx
+src/components/BloodSugarScoreBlock.tsx
+src/store/authStore.ts
+작업 요약: chore: decisions 및 세션 메모리 업데이트
+
+## [2026-05-17 00:33:22]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+app/analysis.tsx
+src/components/BloodSugarScoreBlock.tsx
+src/store/authStore.ts
+작업 요약: chore: decisions 및 세션 메모리 업데이트
+
+## [2026-05-17 00:38:45]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+app/analysis.tsx
+src/components/BloodSugarScoreBlock.tsx
+src/store/authStore.ts
+작업 요약: chore: decisions 및 세션 메모리 업데이트
+
+## [2026-05-17 00:45:13]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+app/analysis.tsx
+src/components/BloodSugarScoreBlock.tsx
+src/store/authStore.ts
+작업 요약: chore: decisions 및 세션 메모리 업데이트

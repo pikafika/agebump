@@ -110,7 +110,7 @@ export function ProfileScreen() {
   const setWeight = useUserProfileStore((s) => s.setWeight);
 
   const { user, isLinking, linkError, linkWithGoogle, unlinkGoogle, clearLinkError } = useAuthStore();
-  const isLinked = !!user && !user.isAnonymous;
+  const isLinked = !!user && user.providerData.some((p) => p.providerId === 'google.com');
   const linkedEmail = isLinked
     ? (user.providerData.find((p) => p.providerId === 'google.com')?.email ?? user.email ?? '')
     : '';
@@ -230,6 +230,13 @@ export function ProfileScreen() {
   }
 
   function confirmUnlinkGoogle() {
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-alert
+      if (window.confirm('구글 연결을 해제할까요?\n기기 간 동기화가 중단됩니다.')) {
+        unlinkGoogle();
+      }
+      return;
+    }
     Alert.alert(
       '구글 연결 해제',
       '연결을 해제하면 기기 간 동기화가 중단됩니다. 기존 기록은 이 기기에 유지됩니다. 계속할까요?',
@@ -288,9 +295,7 @@ export function ProfileScreen() {
           <Text style={styles.headerArrow}>←</Text>
         </Pressable>
         <Text style={styles.title}>계정</Text>
-        <Pressable hitSlop={12} style={styles.headerSide} onPress={() => {}}>
-          <Text style={styles.headerDots}>⋮</Text>
-        </Pressable>
+        <View style={styles.headerSide} />
       </View>
 
       <KeyboardAvoidingView

@@ -156,15 +156,17 @@ export function BloodSugarScoreBlock() {
 
       {/* ③ AI 코멘트 */}
       {hasScore && latestComment ? (
-        <Text style={styles.comment} numberOfLines={1}>
-          💡 {latestComment}
-        </Text>
+        <View style={styles.commentBox}>
+          <Text style={styles.commentIcon}>💡</Text>
+          <Text style={styles.comment}>{latestComment}</Text>
+        </View>
       ) : null}
 
       {/* ⑤ 다음 끼니 제안 */}
-      <Text style={styles.nextMealSuggestion} numberOfLines={1}>
-        🍽 {nextMealSuggestion}
-      </Text>
+      <View style={styles.nextMealBox}>
+        <Text style={styles.nextMealIcon}>🍽</Text>
+        <Text style={styles.nextMealSuggestion}>{nextMealSuggestion}</Text>
+      </View>
 
       {/* ④ 끼니별 점수 바 */}
       {hasScore ? (
@@ -244,15 +246,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  commentBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(29,158,117,0.08)',
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    marginBottom: 6,
+    gap: 6,
+  },
+  commentIcon: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
   comment: {
-    fontSize: 12,
+    flex: 1,
+    fontSize: 12.5,
     color: '#0F6E56',
-    marginBottom: 2,
+    lineHeight: 18,
+    fontWeight: '500',
+  },
+  nextMealBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 4,
+    marginBottom: 6,
+  },
+  nextMealIcon: {
+    fontSize: 12,
+    lineHeight: 17,
   },
   nextMealSuggestion: {
+    flex: 1,
     fontSize: 12,
     color: '#555',
-    marginBottom: 6,
+    lineHeight: 17,
   },
   barsRow: {
     flexDirection: 'row',

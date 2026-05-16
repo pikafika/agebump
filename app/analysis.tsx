@@ -452,9 +452,7 @@ export function AnalysisScreen() {
         <Text style={styles.headerTitle}>
           {isViewingSaved ? '식사 상세' : '음식 분석'}
         </Text>
-        <Pressable hitSlop={12} style={styles.headerSide} onPress={() => {}}>
-          <Text style={styles.headerDots}>⋮</Text>
-        </Pressable>
+        <View style={styles.headerSide} />
       </View>
 
       <KeyboardAvoidingView

@@ -6,10 +6,11 @@ import {
   onAuthStateChanged,
   signInAnonymously,
   signInWithCredential,
-  unlink,
+  signOut,
 } from 'firebase/auth';
 import { create } from 'zustand';
 import { auth } from '../lib/firebase';
+import { useSyncStore } from './syncStore';
 
 interface AuthState {
   user: User | null;
@@ -32,13 +33,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: () => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        set({ user, isInitialized: true });
+        set({ user, isInitialized: true, isLinking: false });
       } else {
         try {
           const credential = await signInAnonymously(auth);
-          set({ user: credential.user, isInitialized: true });
+          set({ user: credential.user, isInitialized: true, isLinking: false });
         } catch {
-          set({ isInitialized: true });
+          set({ isInitialized: true, isLinking: false });
         }
       }
     });
@@ -83,17 +84,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   unlinkGoogle: () => {
-    const { user } = get();
-    if (!user) return;
     set({ isLinking: true, linkError: null });
-    unlink(user, 'google.com')
-      .then((updatedUser) => {
-        set({ user: updatedUser, isLinking: false });
-      })
-      .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : '연결 해제에 실패했어요.';
-        set({ isLinking: false, linkError: message });
-      });
+    useSyncStore.setState({ hasMigrated: false, restoredUid: null, pendingSyncIds: [] });
+
+    if (!auth.currentUser) {
+      // Firebase 세션이 이미 만료된 경우 → 익명 로그인으로 초기화
+      signInAnonymously(auth)
+        .then((c) => set({ user: c.user, isLinking: false }))
+        .catch(() => set({ user: null, isLinking: false }));
+      return;
+    }
+
+    // signOut → onAuthStateChanged(null) → signInAnonymously → onAuthStateChanged(newUser) → isLinking: false
+    signOut(auth).catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : '연결 해제에 실패했어요.';
+      set({ isLinking: false, linkError: message });
+    });
   },
 
   clearLinkError: () => set({ linkError: null }),
