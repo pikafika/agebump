@@ -1758,3 +1758,41 @@ app/analysis.tsx
 src/components/BloodSugarScoreBlock.tsx
 src/store/authStore.ts
 작업 요약: chore: decisions 및 세션 메모리 업데이트
+
+## [2026-05-17 00:50:58]
+변경 파일: (변경 파일 없음)
+작업 요약: feat: 구글 계정 연결 해제 기능 수정 + UI 개선- authStore: unlink 제거, signOut 단독 사용으로 연결 해제 처리  (onAuthStateChanged가 signOut 후 자동으로 익명 로그인 처리)- authStore: auth.currentUser null 케이스 처리 추가- profile: isLinked 판정을 providerData 기반으로 변경- profile: 웹 환경에서 window.confirm() 사용 (Alert.alert 콜백 미동작 이슈 해결)- profile/analysis: 상단 더보기 버튼 숨김 처리- BloodSugarScoreBlock: AI 코멘트·다음 끼니 제안 전체 텍스트 표시 (말줄임 제거)
+
+## [2026-05-17 14:50:46]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+작업 요약: feat: 구글 계정 연결 해제 기능 수정 + UI 개선- authStore: unlink 제거, signOut 단독 사용으로 연결 해제 처리  (onAuthStateChanged가 signOut 후 자동으로 익명 로그인 처리)- authStore: auth.currentUser null 케이스 처리 추가- profile: isLinked 판정을 providerData 기반으로 변경- profile: 웹 환경에서 window.confirm() 사용 (Alert.alert 콜백 미동작 이슈 해결)- profile/analysis: 상단 더보기 버튼 숨김 처리- BloodSugarScoreBlock: AI 코멘트·다음 끼니 제안 전체 텍스트 표시 (말줄임 제거)
+
+## [2026-05-17 15:18:54]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/profile.tsx
+작업 요약: feat: 구글 계정 연결 해제 기능 수정 + UI 개선- authStore: unlink 제거, signOut 단독 사용으로 연결 해제 처리  (onAuthStateChanged가 signOut 후 자동으로 익명 로그인 처리)- authStore: auth.currentUser null 케이스 처리 추가- profile: isLinked 판정을 providerData 기반으로 변경- profile: 웹 환경에서 window.confirm() 사용 (Alert.alert 콜백 미동작 이슈 해결)- profile/analysis: 상단 더보기 버튼 숨김 처리- BloodSugarScoreBlock: AI 코멘트·다음 끼니 제안 전체 텍스트 표시 (말줄임 제거)
+
+## [2026-05-17 15:47:34]
+변경 파일: .claude/memory/decisions.md
+작업 요약: feat: 계정 페이지 설정·정보 섹션 숨김 처리
+
+## [2026-05-17 16:25:22]
+변경 파일: .claude/memory/decisions.md
+작업 요약: fix: Gemini 2.5 Flash thinking 응답 파싱 오류 수정- thinking 기능 비활성화(thinkingBudget: 0)로 불필요한 thinking 파트 제거- thought:true 파트를 건너뛰고 실제 JSON 텍스트 파트를 탐색하도록 파싱 로직 개선  → parts[0]가 thinking content일 때 GeminiParseError로 재촬영 화면이 뜨던 버그 해결- gemini-proxy Edge Runtime → Node.js Runtime 변경으로 크기 제한 완화
+
+## [2026-05-17 16:51:01]
+변경 파일: .claude/memory/decisions.md
+작업 요약: feat: 메인 화면 세로 높이 기반 수직 간격 동적 적응screenHeight 기준 3단계 배율(vScale)로 hero·dateBadge·calorieBlock·metaRow·ctaButton·ctaWrap 수직 간격 조절 — 700pt 미만 0.55, 800pt 미만 0.8, 이상 1.0
+
+## [2026-05-17 16:56:02]
+변경 파일: .claude/memory/decisions.md
+작업 요약: feat: 칼로리 폰트 최대값 축소(128→72) + 식단 찍기 버튼 높이 증가(pt20→pt28)
+
+## [2026-05-17 16:58:05]
+변경 파일: .claude/memory/decisions.md
+작업 요약: feat: 칼로리 폰트 최대값 축소(128→72) + 식단 찍기 버튼 높이 증가(pt20→pt28)
+
+## [2026-05-17 16:58:55]
+변경 파일: .claude/memory/decisions.md
+작업 요약: feat: 칼로리 폰트 최대값 축소(128→72) + 식단 찍기 버튼 높이 증가(pt20→pt28)
