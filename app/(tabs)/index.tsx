@@ -363,7 +363,7 @@ export function HomeScreen() {
   // 가용 폭 = 화면 - hero 좌우 마진(pt20×2) - heroContent 패딩(left pt32 + right pt56) - kcal 텍스트+갭 추정치
   const numberAreaWidth = screenWidth - SPACING.pt20 * 2 - SPACING.pt32 - SPACING.pt56 - 70;
   const calStr = totalCalories.toLocaleString('ko-KR');
-  const calorieFs = Math.min(128, Math.max(36, Math.floor(numberAreaWidth / (calStr.length * 0.55))));
+  const calorieFs = Math.min(72, Math.max(36, Math.floor(numberAreaWidth / (calStr.length * 0.55))));
 
   // 화면 세로 높이 기반 수직 간격 배율: 작은 화면에서 공간 절약
   const vScale = useMemo(() => {
@@ -466,7 +466,7 @@ export function HomeScreen() {
           accessibilityLabel="식단 찍기"
           style={({ pressed }) => [styles.ctaShadow, pressed && styles.ctaPressed]}
         >
-          <View style={[styles.ctaButton, { paddingVertical: SPACING.pt20 * vScale }]}>
+          <View style={[styles.ctaButton, { paddingVertical: SPACING.pt28 * vScale }]}>
             <HugeiconsIcon
               icon={Camera01Icon}
               size={22}
