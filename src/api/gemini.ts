@@ -221,9 +221,11 @@ async function callGeminiApiOnce(
   }
 
   const data = (await response.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[];
   };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  // gemini-2.5-flash 는 thinking 활성화 시 thought:true 파트가 앞에 붙음 — 건너뜀
+  const responseParts = data.candidates?.[0]?.content?.parts ?? [];
+  const text = responseParts.find((p) => !p.thought && typeof p.text === 'string')?.text;
   if (!text) throw new GeminiParseError('');
   return text;
 }
@@ -239,6 +241,7 @@ async function callGeminiApi(
     topP: 0.8,
     topK: 32,
     responseMimeType: 'application/json',
+    thinkingConfig: { thinkingBudget: 0 },
   },
 ): Promise<string> {
   let lastErr: unknown = null;
