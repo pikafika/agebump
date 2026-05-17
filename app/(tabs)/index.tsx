@@ -350,7 +350,7 @@ function GaugeCard({ ratio, percent, theme }: GaugeCardProps) {
 }
 
 export function HomeScreen() {
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { getTodayTotalCalories } = useFoodStore();
   const dailyCalorieGoal = useUserProfileStore((s) => s.dailyCalorieGoal);
   const totalCalories = getTodayTotalCalories();
@@ -364,6 +364,13 @@ export function HomeScreen() {
   const numberAreaWidth = screenWidth - SPACING.pt20 * 2 - SPACING.pt32 - SPACING.pt56 - 70;
   const calStr = totalCalories.toLocaleString('ko-KR');
   const calorieFs = Math.min(128, Math.max(36, Math.floor(numberAreaWidth / (calStr.length * 0.55))));
+
+  // 화면 세로 높이 기반 수직 간격 배율: 작은 화면에서 공간 절약
+  const vScale = useMemo(() => {
+    if (screenHeight < 700) return 0.55;
+    if (screenHeight < 800) return 0.8;
+    return 1;
+  }, [screenHeight]);
 
   // 칼로리 카운트업: 0 → totalCalories (게이지 차오름과 싱크)
   const calAnim = useRef(new Animated.Value(0)).current;
@@ -401,17 +408,17 @@ export function HomeScreen() {
       </View>
 
       {/* ── Hero with Gauge Card Background ── */}
-      <View style={styles.hero}>
+      <View style={[styles.hero, { marginBottom: SPACING.pt16 * vScale }]}>
         <GaugeCard ratio={ratio} percent={percent} theme={theme} />
 
         <View style={styles.heroContent}>
           {/* Date label as a pill */}
-          <View style={styles.dateBadge}>
+          <View style={[styles.dateBadge, { marginBottom: SPACING.pt16 * vScale }]}>
             <View style={[styles.dateBadgeDot, { backgroundColor: theme.badgeDot }]} />
             <Text style={styles.dateBadgeText}>{dateLabel()}</Text>
           </View>
 
-          <View style={styles.calorieBlock}>
+          <View style={[styles.calorieBlock, { marginBottom: SPACING.pt28 * vScale }]}>
             <Text
               style={[styles.calorieNumber, { color: theme.text, fontSize: calorieFs, lineHeight: calorieFs + 4 }]}
               numberOfLines={1}
@@ -423,7 +430,7 @@ export function HomeScreen() {
 
           <BloodSugarScoreBlock />
 
-          <View style={styles.metaRow}>
+          <View style={[styles.metaRow, { paddingVertical: SPACING.pt16 * vScale }]}>
             <View style={styles.metaItem}>
               <Text
                 style={[styles.metaValue, { color: theme.text }]}
@@ -452,14 +459,14 @@ export function HomeScreen() {
       </View>
 
       {/* ── Primary CTA ── */}
-      <View style={styles.ctaWrap}>
+      <View style={[styles.ctaWrap, { paddingBottom: Math.max(SPACING.pt24 * vScale, 16) }]}>
         <Pressable
           onPress={() => router.push('/camera')}
           accessibilityRole="button"
           accessibilityLabel="식단 찍기"
           style={({ pressed }) => [styles.ctaShadow, pressed && styles.ctaPressed]}
         >
-          <View style={styles.ctaButton}>
+          <View style={[styles.ctaButton, { paddingVertical: SPACING.pt20 * vScale }]}>
             <HugeiconsIcon
               icon={Camera01Icon}
               size={22}
