@@ -143,6 +143,16 @@ function RecordCard({ record, onPress, onLongPress, isEditMode, onDelete }: Reco
             ))}
           </View>
         )}
+        {record.postMealFeeling && record.postMealFeeling !== 'skipped' && (
+          <View style={styles.feelingBadge}>
+            <Text style={styles.feelingEmoji}>
+              {record.postMealFeeling === 'drowsy' ? '😴' : '😊'}
+            </Text>
+            <Text style={styles.feelingText}>
+              {record.postMealFeeling === 'drowsy' ? '식후 졸렸음' : '식후 괜찮음'}
+            </Text>
+          </View>
+        )}
       </View>
       <View style={styles.cardRight}>
         <View style={[styles.avatar, { backgroundColor: mealColor + '33' }]}>
@@ -683,6 +693,25 @@ const styles = StyleSheet.create({
   tagText: {
     ...TYPOGRAPHY.caption1,
     fontWeight: FONT_WEIGHT.semiBold,
+  },
+  feelingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: SPACING.pt08,
+    paddingHorizontal: SPACING.pt08,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(120,170,230,0.12)',
+    alignSelf: 'flex-start',
+  },
+  feelingEmoji: {
+    fontSize: 12,
+  },
+  feelingText: {
+    ...TYPOGRAPHY.caption1,
+    color: COLORS.label.alternative as string,
+    fontWeight: FONT_WEIGHT.medium,
   },
 
   cardRight: {

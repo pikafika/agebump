@@ -13,6 +13,9 @@ export interface ScoreLabel {
 /** 식사 유형 */
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
+/** 식후 컨디션 기록 */
+export type PostMealFeeling = 'drowsy' | 'fine' | 'skipped';
+
 /** 음식 하나의 분석 결과 */
 export interface FoodItem {
   /** 음식 이름 */
@@ -99,6 +102,8 @@ export interface FoodRecord {
   aiGuide?: AIGuide;
   /** 신체 정보(BMI·나이) 기반 개인화 점수가 적용된 경우 true */
   isPersonalized?: boolean;
+  /** 식후 컨디션 (다음 방문 시 확인) */
+  postMealFeeling?: PostMealFeeling;
   /**
    * @deprecated 메모는 더 이상 record에 저장되지 않고 expo-secure-store에 분리 저장된다.
    * 기존 데이터 호환을 위해 타입에 남겨두지만 신규 코드에서는 사용하지 말 것.

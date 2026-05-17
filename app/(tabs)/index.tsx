@@ -6,7 +6,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react-native';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
@@ -23,6 +23,9 @@ import {
 import { useFoodStore } from '../../src/store/foodStore';
 import { useUserProfileStore } from '../../src/store/userProfileStore';
 import { BloodSugarScoreBlock } from '../../src/components/BloodSugarScoreBlock';
+import { PostMealCheckCard } from '../../src/components/PostMealCheckCard';
+import { useFocusEffect } from 'expo-router';
+import { type FoodRecord } from '../../src/types/food';
 
 const APP_NAME = '노화방지턱';
 const TICKS_COUNT = 11;
@@ -349,15 +352,41 @@ function GaugeCard({ ratio, percent, theme }: GaugeCardProps) {
   );
 }
 
+const POST_MEAL_MIN_MS = 30 * 60 * 1000;   // 30분 이후부터 질문
+const POST_MEAL_MAX_MS = 4 * 60 * 60 * 1000; // 4시간 이내까지만 질문
+
+function findPendingCheckRecord(records: FoodRecord[]): FoodRecord | null {
+  const now = Date.now();
+  const candidates = records
+    .filter((r) => {
+      const elapsed = now - r.timestamp;
+      return (
+        elapsed >= POST_MEAL_MIN_MS &&
+        elapsed <= POST_MEAL_MAX_MS &&
+        !r.postMealFeeling
+      );
+    })
+    .sort((a, b) => b.timestamp - a.timestamp); // 가장 최근 식사 우선
+  return candidates[0] ?? null;
+}
+
 export function HomeScreen() {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const { getTodayTotalCalories } = useFoodStore();
+  const { getTodayTotalCalories, getTodayRecords } = useFoodStore();
   const dailyCalorieGoal = useUserProfileStore((s) => s.dailyCalorieGoal);
   const totalCalories = getTodayTotalCalories();
   const remaining = Math.max(dailyCalorieGoal - totalCalories, 0);
   const ratio = dailyCalorieGoal > 0 ? totalCalories / dailyCalorieGoal : 0;
   const percent = Math.min(Math.round(ratio * 100), 999);
   const theme = THEME_BY_STATE[getCalorieState(ratio)];
+
+  const [pendingRecord, setPendingRecord] = useState<FoodRecord | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      setPendingRecord(findPendingCheckRecord(getTodayRecords()));
+    }, [getTodayRecords]),
+  );
 
   // 최종 수치 기준으로 폰트 크기 결정 → 애니메이션 중에도 레이아웃 안정
   // 가용 폭 = 화면 - hero 좌우 마진(pt20×2) - heroContent 패딩(left pt32 + right pt56) - kcal 텍스트+갭 추정치
@@ -457,6 +486,16 @@ export function HomeScreen() {
           </View>
         </View>
       </View>
+
+      {/* ── 식후 컨디션 확인 카드 ── */}
+      {pendingRecord && (
+        <View style={styles.postMealWrap}>
+          <PostMealCheckCard
+            record={pendingRecord}
+            onRespond={() => setPendingRecord(null)}
+          />
+        </View>
+      )}
 
       {/* ── Primary CTA ── */}
       <View style={[styles.ctaWrap, { paddingBottom: Math.max(SPACING.pt24 * vScale, 16) }]}>
@@ -745,6 +784,12 @@ const styles = StyleSheet.create({
     height: 30,
     backgroundColor: 'rgba(15,63,26,0.12)',
     marginHorizontal: SPACING.pt04,
+  },
+
+  // ── Post-meal check ──
+  postMealWrap: {
+    paddingHorizontal: SPACING.pt20,
+    paddingBottom: SPACING.pt12,
   },
 
   // ── CTA ──

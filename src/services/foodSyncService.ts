@@ -12,7 +12,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { type AIGuide, type FoodItem, type FoodRecord, type FoodTypeCategory, type MealType, type ScoreLabel } from '../types/food';
+import { type AIGuide, type FoodItem, type FoodRecord, type FoodTypeCategory, type MealType, type PostMealFeeling, type ScoreLabel } from '../types/food';
 import { STORAGE_KEY_PREFIX } from '../store/foodStore';
 
 /** FoodRecord → Firestore 도큐먼트 변환 (imageUri 제외) */
@@ -31,6 +31,7 @@ function toFirestoreDoc(userId: string, record: FoodRecord) {
     scoreLabel: record.scoreLabel ?? null,
     comment: record.comment ?? null,
     aiGuide: record.aiGuide ?? null,
+    postMealFeeling: record.postMealFeeling ?? null,
     updatedAt: serverTimestamp(),
   };
 }
@@ -113,6 +114,7 @@ export async function restoreFromFirestore(userId: string): Promise<FoodRecord[]
       if (data['scoreLabel'] != null) record.scoreLabel = data['scoreLabel'] as ScoreLabel;
       if (data['comment'] != null) record.comment = data['comment'] as string;
       if (data['aiGuide'] != null) record.aiGuide = data['aiGuide'] as AIGuide;
+      if (data['postMealFeeling'] != null) record.postMealFeeling = data['postMealFeeling'] as PostMealFeeling;
       return record;
     })
     .filter((r): r is FoodRecord => r !== null);

@@ -1796,3 +1796,118 @@ app/(tabs)/profile.tsx
 ## [2026-05-17 16:58:55]
 변경 파일: .claude/memory/decisions.md
 작업 요약: feat: 칼로리 폰트 최대값 축소(128→72) + 식단 찍기 버튼 높이 증가(pt20→pt28)
+
+## [2026-05-17 16:59:24]
+변경 파일: (변경 파일 없음)
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 17:00:59]
+변경 파일: .claude/memory/decisions.md
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 17:02:00]
+변경 파일: .claude/memory/decisions.md
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 17:04:50]
+변경 파일: .claude/memory/decisions.md
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 17:12:08]
+변경 파일: .claude/memory/decisions.md
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 17:17:23]
+변경 파일: .claude/memory/decisions.md
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 17:20:39]
+변경 파일: .claude/memory/decisions.md
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 17:43:04]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 17:43:11]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 20:30:28]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 20:33:23]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 22:13:32]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 22:15:25]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 22:16:07]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 22:16:59]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 22:17:27]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 22:18:33]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/services/foodSyncService.ts
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 22:19:29]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/services/foodSyncService.ts
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-17 22:32:14]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/(tabs)/index.tsx
+src/services/foodSyncService.ts
+src/types/food.ts
+작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
