@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ArrowRight01Icon, Edit02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import { router } from 'expo-router';
@@ -27,7 +26,6 @@ import {
 } from '../../src/constants/theme';
 import { analyticsService } from '../../src/services/analyticsService';
 import { useAuthStore } from '../../src/store/authStore';
-import { useFoodStore } from '../../src/store/foodStore';
 import {
   AGE_MAX,
   AGE_MIN,
@@ -39,9 +37,6 @@ import {
   WEIGHT_MIN,
   useUserProfileStore,
 } from '../../src/store/userProfileStore';
-import { ONBOARDING_KEY } from '../onboarding';
-
-const APP_VERSION = '1.0.0';
 
 interface RowProps {
   label: string;
@@ -115,9 +110,6 @@ export function ProfileScreen() {
     ? (user.providerData.find((p) => p.providerId === 'google.com')?.email ?? user.email ?? '')
     : '';
 
-  const clearAllRecords = useFoodStore((s) => s.clearAllRecords);
-  const todayRecordsLength = useFoodStore((s) => s.records.length);
-
   // linkError가 설정될 때 Alert으로 표시 (에러가 깜빡 사라지는 것 방지)
   useEffect(() => {
     if (linkError) {
@@ -189,46 +181,6 @@ export function ProfileScreen() {
   }
 
 
-  function confirmClearToday() {
-    if (todayRecordsLength === 0) {
-      Alert.alert('초기화할 기록이 없어요', '오늘 저장된 기록이 없습니다.');
-      return;
-    }
-    Alert.alert(
-      '오늘 기록 초기화',
-      `오늘 저장된 ${todayRecordsLength}개 기록을 모두 삭제할까요? 되돌릴 수 없습니다.`,
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '삭제',
-          style: 'destructive',
-          onPress: () => {
-            // 오늘만 비우려면 deleteRecord 반복도 가능하나, foodStore.records는 오늘분만 영속화되므로 clearAllRecords로 동일 효과
-            // 단 다른 날짜 키도 함께 비우는 것을 피하려면 records만 set 필요 → 명시적 분기
-            useFoodStore.setState({ records: [] });
-          },
-        },
-      ],
-    );
-  }
-
-  function confirmClearAll() {
-    Alert.alert(
-      '모든 기록 초기화',
-      '저장된 모든 날짜의 식사 기록이 삭제됩니다. 되돌릴 수 없습니다.',
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '전체 삭제',
-          style: 'destructive',
-          onPress: () => {
-            void clearAllRecords();
-          },
-        },
-      ],
-    );
-  }
-
   function confirmUnlinkGoogle() {
     if (Platform.OS === 'web') {
       // eslint-disable-next-line no-alert
@@ -244,41 +196,6 @@ export function ProfileScreen() {
         { text: '취소', style: 'cancel' },
         { text: '연결 해제', style: 'destructive', onPress: unlinkGoogle },
       ],
-    );
-  }
-
-  function confirmRestartOnboarding() {
-    Alert.alert(
-      '온보딩 다시 보기',
-      '시작 화면으로 이동합니다.',
-      [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '이동',
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem(ONBOARDING_KEY);
-            } catch {
-              // ignore — 라우팅은 진행
-            }
-            router.replace('/onboarding');
-          },
-        },
-      ],
-    );
-  }
-
-  function showDisclaimer() {
-    Alert.alert(
-      '면책 고지',
-      '본 앱이 제공하는 영양 분석, 혈당 지수, AI 가이드는 모두 추정값이며 의학적 진단이나 치료를 대체할 수 없습니다. 건강 관련 의사 결정은 반드시 전문의와 상의하세요.',
-    );
-  }
-
-  function showPrivacy() {
-    Alert.alert(
-      '개인정보 처리방침',
-      '식사 기록과 프로필 정보는 단말 내부 및 Firebase 클라우드에 안전하게 저장됩니다. 구글 계정을 연결하면 다른 기기에서도 데이터에 접근할 수 있습니다. AI 분석을 위해 음식 사진은 Google Gemini API로 전송되고, 응답 후 저장되지 않습니다.',
     );
   }
 
@@ -513,49 +430,6 @@ export function ProfileScreen() {
                 </View>
               </>
             ) : null}
-          </Section>
-
-          {/* ── 설정 ── */}
-          <Section title="설정">
-            <Row
-              label="오늘 기록 초기화"
-              onPress={confirmClearToday}
-              trailing="chevron"
-            />
-            <View style={styles.divider} />
-            <Row
-              label="모든 기록 초기화"
-              onPress={confirmClearAll}
-              trailing="chevron"
-              destructive
-            />
-            <View style={styles.divider} />
-            <Row
-              label="온보딩 다시 보기"
-              onPress={confirmRestartOnboarding}
-              trailing="chevron"
-            />
-          </Section>
-
-          {/* ── 정보 ── */}
-          <Section title="정보">
-            <Row
-              label="앱 버전"
-              value={APP_VERSION}
-              trailing="none"
-            />
-            <View style={styles.divider} />
-            <Row
-              label="면책 고지"
-              onPress={showDisclaimer}
-              trailing="chevron"
-            />
-            <View style={styles.divider} />
-            <Row
-              label="개인정보 처리방침"
-              onPress={showPrivacy}
-              trailing="chevron"
-            />
           </Section>
 
           <Text style={styles.footnote}>저속노화 노화방지턱 · 건강한 한 끼를 위한 작은 동반자</Text>
