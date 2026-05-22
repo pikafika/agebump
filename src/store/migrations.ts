@@ -61,10 +61,7 @@ export async function migrateLegacyUtcKeys(): Promise<void> {
       }
     }
 
-    // 1) 기존 모든 record 키 제거
-    await AsyncStorage.multiRemove(recordKeys);
-
-    // 2) 재그룹핑된 데이터 저장 (timestamp 오름차순 정렬 후)
+    // 1) 재그룹핑된 데이터 먼저 저장 (timestamp 오름차순 정렬 후)
     const writes: [string, string][] = [];
     for (const [date, slot] of regrouped) {
       const sorted = slot.records.slice().sort((a, b) => a.timestamp - b.timestamp);
@@ -77,6 +74,9 @@ export async function migrateLegacyUtcKeys(): Promise<void> {
     if (writes.length > 0) {
       await AsyncStorage.multiSet(writes);
     }
+
+    // 2) 저장 완료 후 기존 키 제거 (저장 전 삭제 시 중간 종료로 데이터 손실 방지)
+    await AsyncStorage.multiRemove(recordKeys);
 
     await AsyncStorage.setItem(MIGRATION_FLAG_KEY, '1');
   } catch (err) {

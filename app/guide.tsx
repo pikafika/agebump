@@ -27,6 +27,7 @@ import {
   persistUpdateRecord,
   useFoodStore,
 } from '../src/store/foodStore';
+import { toDateString } from '../src/utils/dateUtils';
 import {
   type AIGuide,
   type FoodRecord,
@@ -127,7 +128,7 @@ export function GuideScreen() {
         }
         if (ts) {
           const dateRecords = await fetchRecordsByDate(
-            new Date(Number(ts)).toISOString().slice(0, 10),
+            toDateString(Number(ts)),
           );
           const found = dateRecords.find((r) => r.id === recordId);
           if (!cancelled) {

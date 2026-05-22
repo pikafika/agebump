@@ -1911,3 +1911,29 @@ app/(tabs)/index.tsx
 src/services/foodSyncService.ts
 src/types/food.ts
 작업 요약: chore: decisions.md 세션 기록 업데이트 (2026-05-17)
+
+## [2026-05-19 00:13:09]
+변경 파일: (변경 파일 없음)
+작업 요약: feat: 식후 컨디션 기록 기능 추가 (PostMealCheckCard) + Firestore 동기화- PostMealFeeling 타입 추가 (drowsy / fine / skipped)- 홈 화면에 식사 30분~4시간 후 컨디션 확인 카드 표시- 식사 기록 카드에 식후 컨디션 배지 표시- postMealFeeling Firestore 저장/복원 지원
+
+## [2026-05-19 00:14:44]
+변경 파일: .claude/memory/decisions.md
+작업 요약: feat: 식후 컨디션 기록 기능 추가 (PostMealCheckCard) + Firestore 동기화- PostMealFeeling 타입 추가 (drowsy / fine / skipped)- 홈 화면에 식사 30분~4시간 후 컨디션 확인 카드 표시- 식사 기록 카드에 식후 컨디션 배지 표시- postMealFeeling Firestore 저장/복원 지원
+
+## [2026-05-19 19:59:17]
+변경 파일: .claude/memory/decisions.md
+작업 요약: feat: 식후 컨디션 기록 기능 추가 (PostMealCheckCard) + Firestore 동기화- PostMealFeeling 타입 추가 (drowsy / fine / skipped)- 홈 화면에 식사 30분~4시간 후 컨디션 확인 카드 표시- 식사 기록 카드에 식후 컨디션 배지 표시- postMealFeeling Firestore 저장/복원 지원
+
+## [2026-05-22 10:28:52]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/guide.tsx
+src/store/migrations.ts
+작업 요약: feat: 식후 컨디션 기록 기능 추가 (PostMealCheckCard) + Firestore 동기화- PostMealFeeling 타입 추가 (drowsy / fine / skipped)- 홈 화면에 식사 30분~4시간 후 컨디션 확인 카드 표시- 식사 기록 카드에 식후 컨디션 배지 표시- postMealFeeling Firestore 저장/복원 지원
+
+## [2026-05-22 10:36:10]
+변경 파일: .claude/memory/decisions.md
+app/(tabs)/history.tsx
+app/guide.tsx
+src/store/migrations.ts
+작업 요약: feat: 식후 컨디션 기록 기능 추가 (PostMealCheckCard) + Firestore 동기화- PostMealFeeling 타입 추가 (drowsy / fine / skipped)- 홈 화면에 식사 30분~4시간 후 컨디션 확인 카드 표시- 식사 기록 카드에 식후 컨디션 배지 표시- postMealFeeling Firestore 저장/복원 지원

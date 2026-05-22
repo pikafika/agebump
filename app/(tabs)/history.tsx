@@ -242,8 +242,10 @@ export function HistoryScreen() {
   // 오늘 기록 변동 시 도트 갱신
   useEffect(() => {
     if (!isToday) return;
-    setCalendarMealTypes((prev) => ({ ...prev }));
-  }, [todayRecords.length, isToday]);
+    fetchMealTypesForDates([today]).then((map) => {
+      setCalendarMealTypes((prev) => ({ ...prev, ...map }));
+    });
+  }, [todayRecords.length, isToday, today]);
 
   function handleSelectDate(iso: string): void {
     setSelectedDate(iso);
@@ -277,7 +279,9 @@ export function HistoryScreen() {
     setIsEditMode(false);
   }, [selectedDate]);
 
-  const records = isToday ? todayRecords : pastRecords;
+  const records = isToday
+    ? todayRecords.filter((r) => toDateString(r.timestamp) === today)
+    : pastRecords;
 
   const orderedRecords = MEAL_ORDER.flatMap((mealType) =>
     records
