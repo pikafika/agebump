@@ -1,8 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -20,6 +19,7 @@ import { GlycemicGauge } from '../src/components/food/GlycemicGauge';
 import { NutritionBar } from '../src/components/food/NutritionBar';
 import { MontageButton } from '../src/components/montage/MontageButton';
 import { MontageCard } from '../src/components/montage/MontageCard';
+import { Toast } from '../src/components/Toast';
 import {
   COLORS,
   FONT_WEIGHT,
@@ -214,6 +214,15 @@ export function AnalysisScreen() {
   const [mealType, setMealType] = useState<MealType>(detectMealType);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  // 저장 성공 토스트 — 웹/네이티브 공통 (Alert.alert이 웹에서 no-op이라 별도 피드백 필요)
+  const [savedToast, setSavedToast] = useState(false);
+  const navTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (navTimerRef.current) clearTimeout(navTimerRef.current);
+    },
+    [],
+  );
   // 웹 카메라 경로: base64(camera.tsx에서 변환 완료) 또는 URI(레거시 폴백)
   type WebSource = { kind: 'base64'; data: string } | { kind: 'uri'; data: string };
   const [webSource] = useState<WebSource | null>(() => {
@@ -392,15 +401,9 @@ export function AnalysisScreen() {
     if (memo.trim().length > 0) {
       await persistMemo(newId, memo);
     }
-    if (Platform.OS === 'web') {
-      // 웹: window.alert은 콜백 미지원 — 동기 다이얼로그 닫히면 바로 이동
-      Alert.alert('저장 완료', '식사 기록이 저장되었습니다.');
-      router.replace('/(tabs)');
-    } else {
-      Alert.alert('저장 완료', '식사 기록이 저장되었습니다.', [
-        { text: '확인', onPress: () => router.replace('/(tabs)') },
-      ]);
-    }
+    // 저장 완료 토스트를 잠깐 띄운 뒤 홈으로 이동 (웹·네이티브 동일 동작)
+    setSavedToast(true);
+    navTimerRef.current = setTimeout(() => router.replace('/(tabs)'), 900);
   }
 
   // 이미 저장된 기록의 메모 편집 시 blur 시점에 secure-store에 즉시 반영
@@ -582,6 +585,8 @@ export function AnalysisScreen() {
         </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Toast visible={savedToast} message="식사 기록이 저장되었습니다" />
     </SafeAreaView>
   );
 }
